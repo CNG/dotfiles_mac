@@ -2,13 +2,22 @@
 
 # install
 
-DOTFILES_ROOT=$(pwd -P)
+DOTFILES_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+# To do symlinks better, see http://stackoverflow.com/a/246128/172602
+MODS_ENABLED="$DOTFILES_ROOT/enabled"
+MODS_AVAILABLE="$DOTFILES_ROOT/available"
+readonly DOTFILES_ROOT MODS_ENABLED MODS_AVAILABLE
 
 # Exit if any command returns nonzero or unset variable referenced.
 set -o errexit -o pipefail -o nounset
 
 # Allow aliases for functions in this script, such as 'alias info'.
 shopt -s expand_aliases
+
+# Make patterns that match nothing disappear instead of treated as string
+# Alternative is put just inside for loop: [[ -f $file ]] || continue
+shopt -s nullglob
+
 
 #######################################
 # Format text for fancy display
@@ -39,6 +48,7 @@ fmt() {
 
 #######################################
 # Print wrappers for customized status output
+# Inspired by similar in @holman/dotfiles
 # Globals:
 #   fmt  (function) Text formatting
 # Arguments:
@@ -50,13 +60,14 @@ fmt() {
 print_wrap () {
   local color= text=
   case $1 in
-    i | info ) color=blue    text='info';;
-    u | user ) color=magenta text=' >> ';;
-    o | okay ) color=green   text='pass';;
-    f | fail ) color=red     text='FAIL';;
+    i | info ) color=blue    text='info' ;;
+    u | user ) color=magenta text=' >> ' ;;
+    o | okay ) color=green   text='pass' ;;
+    f | fail ) color=red     text='FAIL' ;;
     * ) return 1 ;;
   esac
-  printf "\r  [$(fmt $color $text)] $2\n"
+  shift
+  printf " %b" "\r  [$(fmt $color "$text")] $@\n"
 }
 alias info='print_wrap i'
 alias user='print_wrap u'
@@ -83,26 +94,29 @@ link_file () {
   skip_all=${skip_all:-false}
 
   local src=$1 dst=$2
+  local indent=${3:-} # emptry string unless second param set
   local nicesrc=$(fmt bold "$src")
   local nicedst=$(fmt bold "$dst")
   local overwrite= backup= skip= # var=false breaks var=${var:-$var_all}
   local action=
 
   if ! [[ -f $src || -d $src || -L $src ]]; then
-    fail "Source file $nicesrc does not exist."
+    fail "${indent}Source file $nicesrc does not exist."
     return 1
   fi
 
   if [[ -f $dst || -d $dst || -L $dst ]]; then
     local currentSrc=$(readlink $dst)
     if [[ $currentSrc = $src ]]; then
-      okay "$nicedst already points to $nicesrc"
+      okay "${indent}$nicedst already points to $nicesrc"
       return 0
     fi
 
     if [[ $overwrite_all = false && $backup_all = false && $skip_all = false ]]; then
-      user "File $nicedst ($(basename "$src")) already exists. What do you want to do?\n\
-      [s]kip, [S]kip all, [o]verwrite, [O]verwrite all, [b]ackup, [B]ackup all?"
+      info "${indent}Attempting to link to $(fmt bold "$(basename "$src")")."
+      user "${indent}File $nicedst already exists. What do you want to do?"
+      user "${indent}[s]kip, [S]kip all," \
+        '[o]verwrite, [O]verwrite all, [b]ackup, [B]ackup all'
       read -n 1 action
       case $action in
         o ) overwrite=true ;;
@@ -121,22 +135,22 @@ link_file () {
     skip=${skip:-$skip_all}
 
     if [[ $skip = true ]]; then
-      okay "Skipped $nicesrc."
+      okay "${indent}Skipped $nicesrc."
       return 0
     else
       if [[ $overwrite = true ]]; then
-        rm -rf "$dst" &&
-        info "Removed $nicedst."
+        #TODO rm -rf "$dst" &&
+        info "${indent}Removed $nicedst."
       elif [[ $backup = true ]]; then
         local bck="${dst}.$(date "+%Y%m%d_%H%M%S").backup"
-        mv "$dst" "$bck" &&
-        info "Moved $nicedst to $(fmt bold "$bck")."
+        #TODO mv "$dst" "$bck" &&
+        info "${indent}Moved $nicedst to $(fmt bold "$bck")."
       fi
     fi
   fi
 
-  ln -s "$1" "$2" &&
-  okay "Linked $(fmt bold "$1") to $(fmt bold "$2")."
+  #TODO ln -s "$1" "$2" &&
+  okay "${indent}Linked $(fmt bold "$1") to $(fmt bold "$2")."
 }
 
 #######################################
@@ -167,7 +181,8 @@ link_file_test () {
     touch links/file3
     link_file "sources/file1.symlink" "links/file1"
     if link_file "sources/file2.symlink" "links/file2" > /dev/null; then
-      fail "$(fmt bold link_file) did not fail despite $(fmt bold 'sources/file2.symlink') not existing."
+      fail "$(fmt bold link_file) did not fail despite" \
+        "$(fmt bold 'sources/file2.symlink') not existing."
     else
       touch sources/file2.symlink
       link_file "sources/file2.symlink" "links/file2"
@@ -203,68 +218,275 @@ link_file_test () {
   okay "Test of $(fmt bold link_file) completed."
 }
 
+#######################################
+# Enable and install a module
+# Globals:
+#   MODS_AVAILABLE (string) Path to all modules that can be installed.
+#   MODS_ENABLED   (string) Path to symlinks indicating installed modules.
+# Arguments:
+#   module  (string) Name of module
+#   indent  (string) Optional text to prepend to messages
+# Returns:
+#   None
+#######################################
 enable_module () {
   local module=$1
+  local indent=${2:-'- '} # '- ' unless second param set
   local nice_name=$(fmt bold "$module")
-  info "Enabling $nice_name."
-  if [[ -d "available/$module" ]]; then
-    if [[ -h "enabled/$module" ]]; then
-      info "$nice_name was already enabled."
+  info "${indent}Enabling module $nice_name."
+  if [[ -d "$MODS_AVAILABLE/$module" ]]; then
+    if [[ -h "$MODS_ENABLED/$module" ]]; then
+      info "${indent}$nice_name was already enabled."
     else
-      ln -s "../available/$module" "enabled"
-      okay "$nice_name is now enabled."
-      install_module "$module"
+      ln -s "../available/$module" "$MODS_ENABLED"
+      okay "${indent}$nice_name is now enabled."
+      install_module "$module" "$indent- "
     fi
   else
-    if [[ -h "enabled/$module" ]]; then
-      info "$nice_name was already enabled, but it cannot be reenabled if disabled."
+    if [[ -h "$MODS_ENABLED/$module" ]]; then
+      info "${indent}$nice_name was already enabled," \
+        "but it cannot be reenabled if disabled."
     else
-      fail "Cannot find module $nice_name."
+      fail "${indent}Cannot find module $nice_name."
       return 1
     fi
   fi
+  okay "${indent}Done."
 }
 alias enmod='enable_module'
 
 
-# NOT DONE WITH ANYTHING BELOW
-# 
-# 
-# 
-# 
-# 
-# 
-
+#######################################
+# Uninstall and disable a module
+# Globals:
+#   MODS_AVAILABLE (string) Path to all modules that can be installed.
+#   MODS_ENABLED   (string) Path to symlinks indicating installed modules.
+# Arguments:
+#   module  (string) Name of module
+#   indent  (string) Optional text to prepend to messages
+# Returns:
+#   None
+#######################################
 disable_module () {
   local module=$1
+  local indent=${2:-'- '} # '- ' unless second param set
   local nice_name=$(fmt bold $module)
-  info "Disabling $nice_name."
-  if [[ -h "enabled/$module" ]]; then
-    rm -f "enabled/$module"
-    if [[ -d "available/$module" ]]; then
-      okay "$nice_name is now disabled and can be reenabled with $(fmt bold "enmod $1")."
+  info "${indent}Disabling module $nice_name."
+  if [[ -h "$MODS_ENABLED/$module" ]]; then
+    uninstall_module "$module" "$indent- "
+    rm -f "$MODS_ENABLED/$module"
+    if [[ -d "$MODS_AVAILABLE/$module" ]]; then
+      okay "${indent}$nice_name is now disabled and can be reenabled" \
+        "with $(fmt bold "enmod $module")."
     else
-      okay "$nice_name is now disabled and cannot be reenabled because it was nonstandard."
+      okay "${indent}$nice_name is now disabled and cannot be reenabled" \
+        "because it was nonstandard."
     fi
   else
-    if [[ -d "available/$module" ]]; then
-      info "$nice_name was already disabled."
+    if [[ -d "$MODS_AVAILABLE/$module" ]]; then
+      info "${indent}$nice_name was already disabled."
     else
-      info "$nice_name was not enabled and cannot be enabled."
+      info "${indent}$nice_name was not enabled and cannot be enabled."
     fi
   fi
+  okay "${indent}Done."
 }
-alias enmod='disable_module'
+alias dismod='disable_module'
 
+#######################################
+# Install an enabled module
+# Globals:
+#   MODS_ENABLED   (string) Path to symlinks indicating installed modules.
+# Arguments:
+#   module  (string) Name of module
+#   indent  (string) Optional text to prepend to messages
+# Returns:
+#   None
+#######################################
 install_module () {
   local module=$1
-  info "Installing module $module"
-  if [[ -h "enabled/$module" ]]; then
-    for file in "enabled/$module"/*; do
-      info "$file"
-      case $file in
-        *.sh | *.bash ) source "$file" ;;
-        * ) ;;
+  local indent=${2:-} # empty string unless second param set
+  local nice_name=$(fmt bold "$module")
+  local count=0
+  if [[ ! -h "$MODS_ENABLED/$module" ]]; then
+    fail "${indent}Cannot find module $nice_name."
+    return 1
+  fi
+  install_module_dotfiles "$module" "$indent- "
+  info "${indent}Checking for module $nice_name installers."
+  for file in "$MODS_ENABLED/$module"/install*; do
+    case $file in
+      *.sh | *.bash )
+        info "${indent}Executing installer $(fmt bold "$file")."
+        (( count++ ))
+        source "$file"
+        ;;
+      * )
+        fail "${indent}Found $(fmt bold "$file"), but installers must" \
+          "end in $(fmt bold ".sh") or $(fmt bold ".bash")."
+        return 1
+        ;;
+    esac
+  done
+  (( count == 0 )) && info "${indent}Module $nice_name has no installers."
+  update_module "$module" "$indent- "
+  (( count != 0 )) && okay "${indent}Done."
+}
+
+#######################################
+# Update an enabled module
+# Globals:
+#   MODS_ENABLED   (string) Path to symlinks indicating installed modules.
+# Arguments:
+#   module  (string) Name of module
+#   indent  (string) Optional text to prepend to messages
+# Returns:
+#   None
+#######################################
+update_module () {
+  local module=$1
+  local indent=${2:-} # empty string unless second param set
+  local nice_name=$(fmt bold "$module")
+  local count=0
+  if [[ ! -h "$MODS_ENABLED/$module" ]]; then
+    fail "${indent}Cannot find module $nice_name."
+    return 1
+  fi
+  info "${indent}Checking for module $nice_name updaters."
+  for file in "$MODS_ENABLED/$module"/update*; do
+    case $file in
+      *.sh | *.bash )
+        info "${indent}Executing updater $(fmt bold "$file")."
+        (( count++ ))
+        source "$file"
+        ;;
+      * )
+        fail "${indent}Found $(fmt bold "$file"), but updaters must" \
+          "end in $(fmt bold ".sh") or $(fmt bold ".bash")."
+        return 1
+        ;;
+    esac
+  done
+  (( count == 0 )) && info "${indent}Module $nice_name has no updaters."
+  local brewfile=$MODS_ENABLED/$module/Brewfile
+  if [[ -f $brewfile ]]; then
+    info "${indent}Checking for module $nice_name Homebrew updates."
+    if ! brew bundle check --file="$brewfile"; then
+      info "${indent}Installing module $nice_name Homebrew updates."
+      brew bundle --file="$brewfile"
+    fi
+  fi
+  okay "${indent}Done."
+}
+
+#######################################
+# Uninstall a module
+# Globals:
+#   MODS_ENABLED   (string) Path to symlinks indicating installed modules.
+# Arguments:
+#   module  (string) Name of module
+#   indent  (string) Optional text to prepend to messages
+# Returns:
+#   None
+#######################################
+uninstall_module () {
+  local module=$1
+  local indent=${2:-} # empty string unless second param set
+  local nice_name=$(fmt bold "$module")
+  local count=0
+  if [[ ! -h "$MODS_ENABLED/$module" ]]; then
+    fail "${indent}Cannot find module $nice_name."
+    return 1
+  fi
+  info "${indent}Checking for module $nice_name uninstallers."
+  for file in "$MODS_ENABLED/$module"/uninstall*; do
+    case $file in
+      *.sh | *.bash )
+        info "${indent}Executing uninstaller $(fmt bold "$file")."
+        (( count++ ))
+        source "$file"
+        ;;
+      * )
+        fail "${indent}Found $(fmt bold "$file"), but uninstallers must" \
+          "end in $(fmt bold ".sh") or $(fmt bold ".bash")."
+        return 1
+        ;;
+    esac
+  done
+  (( count > 0 )) || info "${indent}Module $nice_name has no uninstallers."
+  okay "${indent}Done."
+}
+
+#######################################
+# Install an enabled module's dotfiles
+# Globals:
+#   MODS_ENABLED   (string) Path to symlinks indicating installed modules.
+# Arguments:
+#   module  (string) Name of module
+#   indent  (string) Optional text to prepend to messages
+# Returns:
+#   None
+#######################################
+install_module_dotfiles () {
+  local module=$1
+  local indent=${2:-} # empty string unless second param set
+  local nice_name=$(fmt bold "$module")
+  local count=0
+  if [[ -h "$MODS_ENABLED/$module" ]]; then
+    info "${indent}Checking for module $nice_name dotfiles."
+    for src in "$MODS_ENABLED/$module"/*.symlink; do
+      dst="$HOME/.$(basename "${src%.*}")"
+      link_file "$src" "$dst" "$indent- "
+      (( count++ ))
+    done
+    (( count > 0 )) || info "${indent}Module $nice_name has no dotfiles."
+  else
+    fail "${indent}Cannot find module $nice_name."
+    return 1
+  fi
+  okay "${indent}Done."
+}
+
+#######################################
+# Remove Homebrew installed programs that are not in the cumulative Brewfiles
+# Globals:
+#   DOTFILES_ROOT  (string) Application directory.
+# Arguments:
+#   indent  (string) Optional text to prepend to messages
+# Returns:
+#   None
+#######################################
+cleanup () {
+  local indent=${1:-} # empty string unless second param set
+  local brewcommand="find -H \"$DOTFILES_ROOT\" -not \( -path available -prune \) -name Brewfile -print0 | xargs -0 cat | brew bundle cleanup --file=-"
+  local result
+  eval "result=\$($brewcommand)"
+  if [[ $result =~ 'Would uninstall formulae' ]]; then
+    info "${indent}The following Homebrew programs that were manually installed:"
+    result=$(echo "$result" | tail -n +2 | tr '\n' ',')
+    result=${result%,}
+    info "${indent}$(fmt bold "${result//,/, }")"
+    user "${indent}Uninstall?  $(fmt bold 'n/Y')"
+    while read -n 1 action; do
+      case $action in
+        n )
+          info "${indent}All right, they will be left alone."
+          break
+          ;;
+        Y )
+          info "${indent}Uninstalling."
+          eval "$brewcommand --force" > /dev/null
+          if (( $? != 0 )); then
+            fail "${indent}Error uninstalling."
+            return 1
+          else
+            okay "${indent}Done."
+          fi
+          break
+          ;;
+        * )
+          fail "${indent}$(fmt bold "$action") is not valid. Enter $(fmt bold n) or $(fmt bold Y)."
+          ;;
       esac
     done
   fi
@@ -275,23 +497,34 @@ install_module () {
 
 
 
-# likely won't need this but saving the command in case I rejigger
-install_installs () {
-  for installer in $(find -L enabled -type f -name 'install.*' -print); do
-    source "$installer"
-  done
-}
-install_dotfiles () {
-  info 'installing dotfiles'
-  local overwrite_all=false backup_all=false skip_all=false
-  local results=$(find -H "$DOTFILES_ROOT/enabled" -maxdepth 2 -name '*.symlink' -not -path '*.git*')
-  for src in $results; do
-    dst="$HOME/.$(basename "${src%.*}")"
-    link_file "$src" "$dst"
-  done
+
+main () {
+  info 'Installing.'
+
+  # Make sure we have brew bundle and mac app store tie in
+  if [ "$(uname -s)" == "Darwin" ]
+  then
+    brew tap Homebrew/bundle
+    if ! brew ls --versions mas > /dev/null; then
+      brew install mas
+    fi
+    local brewfile=$DOTFILES_ROOT/Brewfile
+    if [[ -f $brewfile ]]; then
+      info 'Checking for Homebrew updates.'
+      if ! brew bundle check --file="$brewfile" > /dev/null; then
+        info 'Installing Homebrew updates.'
+        brew bundle --file="$brewfile"
+      fi
+    fi
+    cleanup '- '
+  fi
+
+  #enmod git
+  #dismod git
+
+  okay "Done."
+
 }
 
-link_file_test
+main "$@"
 
-#enmod git
-okay "Done"
