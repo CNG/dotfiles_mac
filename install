@@ -1,0 +1,297 @@
+#!/usr/bin/env bash
+
+# install
+
+DOTFILES_ROOT=$(pwd -P)
+
+# Exit if any command returns nonzero or unset variable referenced.
+set -o errexit -o pipefail -o nounset
+
+# Allow aliases for functions in this script, such as 'alias info'.
+shopt -s expand_aliases
+
+#######################################
+# Format text for fancy display
+# Globals:
+#   None
+# Arguments:
+#   format  (string) Must be one of: bold, under (for underline), red, green,
+#     yellow, blue, magenta, cyan, white, red, purple
+#   text    (string) Text to be formatted
+# Returns:
+#   Echos string wrapped in escape codes for given format
+#######################################
+fmt() {
+  local reset=$(tput sgr0)
+  local bold=$(tput bold)
+  local under=$(tput smul)
+  local red=$(tput setaf 1)
+  local green=$(tput setaf 2)
+  local yellow=$(tput setaf 3)
+  local blue=$(tput setaf 4)
+  local magenta=$(tput setaf 5)
+  local cyan=$(tput setaf 6)
+  local white=$(tput setaf 7)
+  local red=$(tput setaf 9)
+  local purple=$(tput setaf 13)
+  echo "${!1}$2${reset}"
+}
+
+#######################################
+# Print wrappers for customized status output
+# Globals:
+#   fmt  (function) Text formatting
+# Arguments:
+#   type  (string) Notice type: (i|info)|(u|user)|(o|okay)|(f|fail)
+#   text  (string) Text to be wrapped
+# Returns:
+#   Prints given text prepended by 'info', ' >> ', 'pass' or 'FAIL'
+#######################################
+print_wrap () {
+  local color= text=
+  case $1 in
+    i | info ) color=blue    text='info';;
+    u | user ) color=magenta text=' >> ';;
+    o | okay ) color=green   text='pass';;
+    f | fail ) color=red     text='FAIL';;
+    * ) return 1 ;;
+  esac
+  printf "\r  [$(fmt $color $text)] $2\n"
+}
+alias info='print_wrap i'
+alias user='print_wrap u'
+alias okay='print_wrap o'
+alias fail='print_wrap f'
+
+#######################################
+# Create symlinks and prompt on conflict to skip, overwrite or backup.
+# Based on @holman/dotfiles but largely changed logic.
+# Globals:
+#   overwrite_all (bool) Optional flag
+#   backup_all    (bool) Optional flag
+#   skip_all      (bool) Optional flag
+# Arguments:
+#   src (file) Source file
+#   dst (file) Directory to put link
+# Returns:
+#   Prints actions taken.
+#######################################
+link_file () {
+  # set global vars to defaults if not set
+  overwrite_all=${overwrite_all:-false}
+  backup_all=${backup_all:-false}
+  skip_all=${skip_all:-false}
+
+  local src=$1 dst=$2
+  local nicesrc=$(fmt bold "$src")
+  local nicedst=$(fmt bold "$dst")
+  local overwrite= backup= skip= # var=false breaks var=${var:-$var_all}
+  local action=
+
+  if ! [[ -f $src || -d $src || -L $src ]]; then
+    fail "Source file $nicesrc does not exist."
+    return 1
+  fi
+
+  if [[ -f $dst || -d $dst || -L $dst ]]; then
+    local currentSrc=$(readlink $dst)
+    if [[ $currentSrc = $src ]]; then
+      okay "$nicedst already points to $nicesrc"
+      return 0
+    fi
+
+    if [[ $overwrite_all = false && $backup_all = false && $skip_all = false ]]; then
+      user "File $nicedst ($(basename "$src")) already exists. What do you want to do?\n\
+      [s]kip, [S]kip all, [o]verwrite, [O]verwrite all, [b]ackup, [B]ackup all?"
+      read -n 1 action
+      case $action in
+        o ) overwrite=true ;;
+        O ) overwrite_all=true ;;
+        b ) backup=true ;;
+        B ) backup_all=true ;;
+        s ) skip=true ;;
+        S ) skip_all=true ;;
+        * ) ;;
+      esac
+    fi
+
+    # assumes initialized with 'var=' not 'var=false'
+    overwrite=${overwrite:-$overwrite_all}
+    backup=${backup:-$backup_all}
+    skip=${skip:-$skip_all}
+
+    if [[ $skip = true ]]; then
+      okay "Skipped $nicesrc."
+      return 0
+    else
+      if [[ $overwrite = true ]]; then
+        rm -rf "$dst" &&
+        info "Removed $nicedst."
+      elif [[ $backup = true ]]; then
+        local bck="${dst}.$(date "+%Y%m%d_%H%M%S").backup"
+        mv "$dst" "$bck" &&
+        info "Moved $nicedst to $(fmt bold "$bck")."
+      fi
+    fi
+  fi
+
+  ln -s "$1" "$2" &&
+  okay "Linked $(fmt bold "$1") to $(fmt bold "$2")."
+}
+
+#######################################
+# Tests the link_file function with simple end result sanity check when using
+# overwrite_all=true or backup_all=true or skip_all=true.
+# Globals:
+#   link_file  (function)
+# Arguments:
+#   None
+# Returns:
+#   Prints actions taken.
+#######################################
+link_file_test () {
+  local temp_dir="link_file_test_$(date "+%Y%m%d_%H%M%S")"
+  local tests=(overwrite_all backup_all skip_all)
+  mkdir "$temp_dir"
+  cd "$temp_dir"
+  for testing in "${tests[@]}"; do
+    info "$(fmt bold "$testing=true") test commencing."
+    eval ${testing}=true
+
+    # set up files
+    mkdir -p sources
+    mkdir -p links
+    touch sources/file1.symlink
+    touch links/file2
+    touch sources/file3.symlink
+    touch links/file3
+    link_file "sources/file1.symlink" "links/file1"
+    if link_file "sources/file2.symlink" "links/file2" > /dev/null; then
+      fail "$(fmt bold link_file) did not fail despite $(fmt bold 'sources/file2.symlink') not existing."
+    else
+      touch sources/file2.symlink
+      link_file "sources/file2.symlink" "links/file2"
+    fi
+    link_file "sources/file3.symlink" "links/file3"
+
+    # verify files
+    list=$(ls -l links sources)
+    expectations=()
+    expectations+=('file1 -> sources/file1.symlink')
+    if [[ $testing != 'skip_all' ]]; then
+      expectations+=('file2 -> sources/file2.symlink')
+      expectations+=('file3 -> sources/file3.symlink')
+    fi
+    if [[ $testing = 'backup_all' ]]; then
+      expectations+=('file2\.[_0-9]{15}\.backup')
+      expectations+=('file3\.[_0-9]{15}\.backup')
+    fi
+    for i in "${expectations[@]}"; do
+      if [[ ! $list =~ $i ]]; then
+        fail "Test of $(fmt bold link_file) failed to find $(fmt bold "$i")"
+        return 1
+      fi
+    done
+
+    # clean up this subtest
+    eval ${testing}=false
+    rm -rf sources
+    rm -rf links
+  done
+  cd ..
+  rm -rf "$temp_dir"
+  okay "Test of $(fmt bold link_file) completed."
+}
+
+enable_module () {
+  local module=$1
+  local nice_name=$(fmt bold "$module")
+  info "Enabling $nice_name."
+  if [[ -d "available/$module" ]]; then
+    if [[ -h "enabled/$module" ]]; then
+      info "$nice_name was already enabled."
+    else
+      ln -s "../available/$module" "enabled"
+      okay "$nice_name is now enabled."
+      install_module "$module"
+    fi
+  else
+    if [[ -h "enabled/$module" ]]; then
+      info "$nice_name was already enabled, but it cannot be reenabled if disabled."
+    else
+      fail "Cannot find module $nice_name."
+      return 1
+    fi
+  fi
+}
+alias enmod='enable_module'
+
+
+# NOT DONE WITH ANYTHING BELOW
+# 
+# 
+# 
+# 
+# 
+# 
+
+disable_module () {
+  local module=$1
+  local nice_name=$(fmt bold $module)
+  info "Disabling $nice_name."
+  if [[ -h "enabled/$module" ]]; then
+    rm -f "enabled/$module"
+    if [[ -d "available/$module" ]]; then
+      okay "$nice_name is now disabled and can be reenabled with $(fmt bold "enmod $1")."
+    else
+      okay "$nice_name is now disabled and cannot be reenabled because it was nonstandard."
+    fi
+  else
+    if [[ -d "available/$module" ]]; then
+      info "$nice_name was already disabled."
+    else
+      info "$nice_name was not enabled and cannot be enabled."
+    fi
+  fi
+}
+alias enmod='disable_module'
+
+install_module () {
+  local module=$1
+  info "Installing module $module"
+  if [[ -h "enabled/$module" ]]; then
+    for file in "enabled/$module"/*; do
+      info "$file"
+      case $file in
+        *.sh | *.bash ) source "$file" ;;
+        * ) ;;
+      esac
+    done
+  fi
+}
+
+
+
+
+
+
+# likely won't need this but saving the command in case I rejigger
+install_installs () {
+  for installer in $(find -L enabled -type f -name 'install.*' -print); do
+    source "$installer"
+  done
+}
+install_dotfiles () {
+  info 'installing dotfiles'
+  local overwrite_all=false backup_all=false skip_all=false
+  local results=$(find -H "$DOTFILES_ROOT/enabled" -maxdepth 2 -name '*.symlink' -not -path '*.git*')
+  for src in $results; do
+    dst="$HOME/.$(basename "${src%.*}")"
+    link_file "$src" "$dst"
+  done
+}
+
+link_file_test
+
+#enmod git
+okay "Done"
