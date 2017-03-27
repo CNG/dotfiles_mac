@@ -20,7 +20,7 @@ shopt -s nullglob
 
 
 #######################################
-# Format text for fancy display
+# Format text for fancy display.
 # Globals:
 #   None
 # Arguments:
@@ -47,7 +47,7 @@ fmt() {
 }
 
 #######################################
-# Print wrappers for customized status output
+# Print wrappers for customized status output.
 # Inspired by similar in @holman/dotfiles
 # Globals:
 #   fmt  (function) Text formatting
@@ -75,151 +75,36 @@ alias okay='print_wrap o'
 alias fail='print_wrap f'
 
 #######################################
-# Create symlinks and prompt on conflict to skip, overwrite or backup.
-# Based on @holman/dotfiles but largely changed logic.
+# Try to put file or directory in trash, otherwise delete.
 # Globals:
-#   overwrite_all (bool) Optional flag
-#   backup_all    (bool) Optional flag
-#   skip_all      (bool) Optional flag
-# Arguments:
-#   src (file) Source file
-#   dst (file) Directory to put link
-# Returns:
-#   Prints actions taken.
-#######################################
-link_file () {
-  # set global vars to defaults if not set
-  overwrite_all=${overwrite_all:-false}
-  backup_all=${backup_all:-false}
-  skip_all=${skip_all:-false}
-
-  local src=$1 dst=$2
-  local indent=${3:-} # emptry string unless second param set
-  local nicesrc=$(fmt bold "$src")
-  local nicedst=$(fmt bold "$dst")
-  local overwrite= backup= skip= # var=false breaks var=${var:-$var_all}
-  local action=
-
-  if ! [[ -f $src || -d $src || -L $src ]]; then
-    fail "${indent}Source file $nicesrc does not exist."
-    return 1
-  fi
-
-  if [[ -f $dst || -d $dst || -L $dst ]]; then
-    local currentSrc=$(readlink $dst)
-    if [[ $currentSrc = $src ]]; then
-      okay "${indent}$nicedst already points to $nicesrc"
-      return 0
-    fi
-
-    if [[ $overwrite_all = false && $backup_all = false && $skip_all = false ]]; then
-      info "${indent}Attempting to link to $(fmt bold "$(basename "$src")")."
-      user "${indent}File $nicedst already exists. What do you want to do?"
-      user "${indent}[s]kip, [S]kip all," \
-        '[o]verwrite, [O]verwrite all, [b]ackup, [B]ackup all'
-      read -n 1 action
-      case $action in
-        o ) overwrite=true ;;
-        O ) overwrite_all=true ;;
-        b ) backup=true ;;
-        B ) backup_all=true ;;
-        s ) skip=true ;;
-        S ) skip_all=true ;;
-        * ) ;;
-      esac
-    fi
-
-    # assumes initialized with 'var=' not 'var=false'
-    overwrite=${overwrite:-$overwrite_all}
-    backup=${backup:-$backup_all}
-    skip=${skip:-$skip_all}
-
-    if [[ $skip = true ]]; then
-      okay "${indent}Skipped $nicesrc."
-      return 0
-    else
-      if [[ $overwrite = true ]]; then
-        #TODO rm -rf "$dst" &&
-        info "${indent}Removed $nicedst."
-      elif [[ $backup = true ]]; then
-        local bck="${dst}.$(date "+%Y%m%d_%H%M%S").backup"
-        #TODO mv "$dst" "$bck" &&
-        info "${indent}Moved $nicedst to $(fmt bold "$bck")."
-      fi
-    fi
-  fi
-
-  #TODO ln -s "$1" "$2" &&
-  okay "${indent}Linked $(fmt bold "$1") to $(fmt bold "$2")."
-}
-
-#######################################
-# Tests the link_file function with simple end result sanity check when using
-# overwrite_all=true or backup_all=true or skip_all=true.
-# Globals:
-#   link_file  (function)
-# Arguments:
 #   None
+# Arguments:
+#   item    (string) File or directory to trash
+#   indent  (string) Optional text to prepend to messages
 # Returns:
-#   Prints actions taken.
+#   None
 #######################################
-link_file_test () {
-  local temp_dir="link_file_test_$(date "+%Y%m%d_%H%M%S")"
-  local tests=(overwrite_all backup_all skip_all)
-  mkdir "$temp_dir"
-  cd "$temp_dir"
-  for testing in "${tests[@]}"; do
-    info "$(fmt bold "$testing=true") test commencing."
-    eval ${testing}=true
-
-    # set up files
-    mkdir -p sources
-    mkdir -p links
-    touch sources/file1.symlink
-    touch links/file2
-    touch sources/file3.symlink
-    touch links/file3
-    link_file "sources/file1.symlink" "links/file1"
-    if link_file "sources/file2.symlink" "links/file2" > /dev/null; then
-      fail "$(fmt bold link_file) did not fail despite" \
-        "$(fmt bold 'sources/file2.symlink') not existing."
-    else
-      touch sources/file2.symlink
-      link_file "sources/file2.symlink" "links/file2"
-    fi
-    link_file "sources/file3.symlink" "links/file3"
-
-    # verify files
-    list=$(ls -l links sources)
-    expectations=()
-    expectations+=('file1 -> sources/file1.symlink')
-    if [[ $testing != 'skip_all' ]]; then
-      expectations+=('file2 -> sources/file2.symlink')
-      expectations+=('file3 -> sources/file3.symlink')
-    fi
-    if [[ $testing = 'backup_all' ]]; then
-      expectations+=('file2\.[_0-9]{15}\.backup')
-      expectations+=('file3\.[_0-9]{15}\.backup')
-    fi
-    for i in "${expectations[@]}"; do
-      if [[ ! $list =~ $i ]]; then
-        fail "Test of $(fmt bold link_file) failed to find $(fmt bold "$i")"
-        return 1
+trash_file () {
+  local item=$1
+  local indent=${2:-} # empty string unless second param set
+  if [[ -d $item || -f $item ]]; then
+    info "${indent}Trashing $(fmt bold "$item")."
+    if test ! $(which trash); then
+      if brew install trash; then
+        trash "$item"
+        brew uninstall trash
+      else
+        info "${indent}Unable to install trash. Deleting $(fmt bold "$item")."
+        rm -rf "$item"
       fi
-    done
-
-    # clean up this subtest
-    eval ${testing}=false
-    rm -rf sources
-    rm -rf links
-  done
-  cd ..
-  rm -rf "$temp_dir"
-  okay "Test of $(fmt bold link_file) completed."
+    else
+      trash "$item"
+    fi
+  fi
 }
 
 #######################################
-# Enable and install a module
+# Enable and install a module.
 # Globals:
 #   MODS_AVAILABLE (string) Path to all modules that can be installed.
 #   MODS_ENABLED   (string) Path to symlinks indicating installed modules.
@@ -272,9 +157,8 @@ enable_module () {
 }
 alias enmod='enable_module'
 
-
 #######################################
-# Uninstall and disable a module
+# Uninstall and disable a module.
 # Globals:
 #   MODS_AVAILABLE (string) Path to all modules that can be installed.
 #   MODS_ENABLED   (string) Path to symlinks indicating installed modules.
@@ -315,7 +199,7 @@ disable_module () {
 alias dismod='disable_module'
 
 #######################################
-# Install an enabled module
+# Install an enabled module.
 # Globals:
 #   MODS_ENABLED   (string) Path to symlinks indicating installed modules.
 # Arguments:
@@ -362,7 +246,7 @@ install_module () {
 }
 
 #######################################
-# Update an enabled module
+# Update an enabled module.
 # Globals:
 #   MODS_ENABLED   (string) Path to symlinks indicating installed modules.
 # Arguments:
@@ -448,7 +332,7 @@ update_module () {
 }
 
 #######################################
-# Uninstall a module
+# Uninstall a module.
 # Globals:
 #   MODS_ENABLED   (string) Path to symlinks indicating installed modules.
 # Arguments:
@@ -521,23 +405,8 @@ uninstall_module () {
   fi
 }
 
-trash_file () {
-  local item=$1
-  local indent=${2:-} # empty string unless second param set
-  if [[ -d $item || -f $item ]]; then
-    info "${indent}Trashing $(fmt bold "$item")"
-    if test ! $(which trash); then
-      brew install trash
-      trash "$item"
-      brew uninstall trash
-    else
-      trash "$item"
-    fi
-  fi
-}
-
 #######################################
-# Install an enabled module's dotfiles
+# Install an enabled module's dotfiles.
 # Globals:
 #   MODS_ENABLED   (string) Path to symlinks indicating installed modules.
 # Arguments:
@@ -571,7 +440,151 @@ install_module_dotfiles () {
 }
 
 #######################################
-# Remove Homebrew installed programs that are not in the cumulative Brewfiles
+# Create symlinks and prompt on conflict to skip, overwrite or backup.
+# Based on @holman/dotfiles but largely changed logic.
+# Globals:
+#   overwrite_all (bool) Optional flag
+#   backup_all    (bool) Optional flag
+#   skip_all      (bool) Optional flag
+# Arguments:
+#   src (file) Source file
+#   dst (file) Directory to put link
+# Returns:
+#   Prints actions taken.
+#######################################
+link_file () {
+  # set global vars to defaults if not set
+  overwrite_all=${overwrite_all:-false}
+  backup_all=${backup_all:-false}
+  skip_all=${skip_all:-false}
+
+  local src=$1 dst=$2
+  local indent=${3:-} # emptry string unless second param set
+  local nicesrc=$(fmt bold "$src")
+  local nicedst=$(fmt bold "$dst")
+  local overwrite= backup= skip= # var=false breaks var=${var:-$var_all}
+  local action=
+
+  if ! [[ -f $src || -d $src || -L $src ]]; then
+    fail "${indent}Source file $nicesrc does not exist."
+    return 1
+  fi
+
+  if [[ -f $dst || -d $dst || -L $dst ]]; then
+    local currentSrc=$(readlink $dst)
+    if [[ $currentSrc = $src ]]; then
+      okay "${indent}$nicedst already points to $nicesrc"
+      return 0
+    fi
+
+    if [[ $overwrite_all = false && $backup_all = false && $skip_all = false ]]; then
+      info "${indent}Attempting to link to $(fmt bold "$(basename "$src")")."
+      user "${indent}File $nicedst already exists. What do you want to do?"
+      user "${indent}[s]kip, [S]kip all," \
+        '[o]verwrite, [O]verwrite all, [b]ackup, [B]ackup all'
+      read -n 1 action
+      case $action in
+        o ) overwrite=true ;;
+        O ) overwrite_all=true ;;
+        b ) backup=true ;;
+        B ) backup_all=true ;;
+        s ) skip=true ;;
+        S ) skip_all=true ;;
+        * ) ;;
+      esac
+    fi
+
+    # assumes initialized with 'var=' not 'var=false'
+    overwrite=${overwrite:-$overwrite_all}
+    backup=${backup:-$backup_all}
+    skip=${skip:-$skip_all}
+
+    if [[ $skip = true ]]; then
+      okay "${indent}Skipped $nicesrc."
+      return 0
+    else
+      if [[ $overwrite = true ]]; then
+        rm -rf "$dst" &&
+        info "${indent}Removed $nicedst."
+      elif [[ $backup = true ]]; then
+        local bck="${dst}.$(date "+%Y%m%d_%H%M%S").backup"
+        mv "$dst" "$bck" &&
+        info "${indent}Moved $nicedst to $(fmt bold "$bck")."
+      fi
+    fi
+  fi
+
+  ln -s "$1" "$2" &&
+  okay "${indent}Linked $(fmt bold "$1") to $(fmt bold "$2")."
+}
+
+#######################################
+# Tests the link_file function with simple end result sanity check when using
+# overwrite_all=true or backup_all=true or skip_all=true.
+# Globals:
+#   link_file  (function)
+# Arguments:
+#   None
+# Returns:
+#   Prints actions taken.
+#######################################
+link_file_test () {
+  local temp_dir="link_file_test_$(date "+%Y%m%d_%H%M%S")"
+  local tests=(overwrite_all backup_all skip_all)
+  mkdir "$temp_dir"
+  cd "$temp_dir"
+  for testing in "${tests[@]}"; do
+    info "$(fmt bold "$testing=true") test commencing."
+    eval ${testing}=true
+
+    # set up files
+    mkdir -p sources
+    mkdir -p links
+    touch sources/file1.symlink
+    touch links/file2
+    touch sources/file3.symlink
+    touch links/file3
+    link_file "sources/file1.symlink" "links/file1"
+    if link_file "sources/file2.symlink" "links/file2" > /dev/null; then
+      fail "$(fmt bold link_file) did not fail despite" \
+        "$(fmt bold 'sources/file2.symlink') not existing."
+    else
+      touch sources/file2.symlink
+      link_file "sources/file2.symlink" "links/file2"
+    fi
+    link_file "sources/file3.symlink" "links/file3"
+
+    # verify files
+    list=$(ls -l links sources)
+    expectations=()
+    expectations+=('file1 -> sources/file1.symlink')
+    if [[ $testing != 'skip_all' ]]; then
+      expectations+=('file2 -> sources/file2.symlink')
+      expectations+=('file3 -> sources/file3.symlink')
+    fi
+    if [[ $testing = 'backup_all' ]]; then
+      expectations+=('file2\.[_0-9]{15}\.backup')
+      expectations+=('file3\.[_0-9]{15}\.backup')
+    fi
+    for i in "${expectations[@]}"; do
+      if [[ ! $list =~ $i ]]; then
+        fail "Test of $(fmt bold link_file) failed to find $(fmt bold "$i")"
+        return 1
+      fi
+    done
+
+    # clean up this subtest
+    eval ${testing}=false
+    rm -rf sources
+    rm -rf links
+  done
+  cd ..
+  rm -rf "$temp_dir"
+  okay "Test of $(fmt bold link_file) completed."
+}
+
+#######################################
+# Remove Homebrew installed programs that are not in the cumulative Brewfiles.
 # Globals:
 #   DOTFILES_ROOT  (string) Application directory.
 # Arguments:
@@ -595,10 +608,7 @@ cleanup () {
     user "${indent}Uninstall?  $(fmt bold 'n/Y')"
     while read -n 1 action; do
       case $action in
-        n )
-          info "${indent}All right, they will be left alone."
-          break
-          ;;
+        n ) info "${indent}All right, they will be left alone." break ;;
         Y )
           info "${indent}Uninstalling."
           eval "$brewcommand --force" > /dev/null
@@ -611,7 +621,8 @@ cleanup () {
           break
           ;;
         * )
-          fail "${indent}$(fmt bold "$action") is not valid. Enter $(fmt bold n) or $(fmt bold Y)."
+          fail "${indent}$(fmt bold "$action") is not valid." \
+            "Enter $(fmt bold n) or $(fmt bold Y)."
           ;;
       esac
     done
