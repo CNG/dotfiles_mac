@@ -1,0 +1,5 @@
+cask 'plex-media-server'
+cask 'plex-media-player'
+cask 'vlc'
+cask 'spotify'
+

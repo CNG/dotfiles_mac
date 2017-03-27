@@ -1,0 +1,43 @@
+# my products and services
+cask 'backblaze'
+cask 'drobo-dashboard'
+cask 'logitech-options'
+cask 'folding-at-home'
+
+# browsers
+cask 'firefox'
+cask 'google-chrome'
+cask 'opera'
+
+# user interface
+cask 'rdm'
+cask 'scroll-reverser'
+mas 'Clipboard History', id: 420939835
+# cask 'divvy'
+mas 'Divvy', id: 413857545
+
+# logging
+cask 'rescuetime'
+
+# filesystem tools
+cask 'the-unarchiver'
+#mas 'The Unarchiver', id: 425424353
+cask 'sdformatter'
+mas 'Blackmagic Disk Speed Test', id: 425264550
+
+# office
+cask 'pdfpenpro'
+
+# network tools
+#cask 'peakhour'
+mas 'PeakHour 3', id: 961578824
+#cask 'netspot'
+mas 'NetSpot', id: 514951692
+mas 'NetSpot Wi-Fi Reporter', id: 678464954
+
+#other
+#mas 'LittleIpsum', id: 405772121
+#mas 'RSS Bot', id: 605732865
+#mas 'Microsoft Remote Desktop', id: 715768417
+mas 'Stock + Pro', id: 534067900
+cask 'google-earth'

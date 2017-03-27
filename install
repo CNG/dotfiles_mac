@@ -231,27 +231,44 @@ link_file_test () {
 #######################################
 enable_module () {
   local module=$1
-  local indent=${2:-'- '} # '- ' unless second param set
+  local indent=${2:-'| '} # '| ' unless second param set
+  local outer=$indent
+  local inner="$indent| "
   local nice_name=$(fmt bold "$module")
-  info "${indent}Enabling module $nice_name."
+
+  info "${outer}Enabling module $nice_name."
   if [[ -d "$MODS_AVAILABLE/$module" ]]; then
     if [[ -h "$MODS_ENABLED/$module" ]]; then
-      info "${indent}$nice_name was already enabled."
+      info "${inner}Module $nice_name was already enabled."
     else
       ln -s "../available/$module" "$MODS_ENABLED"
-      okay "${indent}$nice_name is now enabled."
-      install_module "$module" "$indent- "
+      #info "${inner}Module $nice_name is now enabled."
+      trap_term_signal () {
+        fail "${inner}TERMINATING DUE TO SIGNAL"
+        disable_module "$module" "$inner"
+        exit
+      }
+      trap_fail () {
+        fail "${inner}Disabling module without uninstalling due to failure."
+        user "Resolve error and run command: $(fmt bold "enmod $module")"
+        rm -f "$MODS_ENABLED/$module"
+        exit
+      }
+      trap trap_cleanup INT TERM
+      trap trap_fail EXIT
+      install_module "$module" "$inner"
+      trap - INT TERM EXIT
     fi
   else
     if [[ -h "$MODS_ENABLED/$module" ]]; then
-      info "${indent}$nice_name was already enabled," \
+      info "${inner}Module $nice_name was already enabled," \
         "but it cannot be reenabled if disabled."
     else
-      fail "${indent}Cannot find module $nice_name."
+      fail "${inner}Cannot find module $nice_name."
       return 1
     fi
   fi
-  okay "${indent}Done."
+  okay "${outer}Done."
 }
 alias enmod='enable_module'
 
@@ -269,27 +286,31 @@ alias enmod='enable_module'
 #######################################
 disable_module () {
   local module=$1
-  local indent=${2:-'- '} # '- ' unless second param set
+  local indent=${2:-'| '} # '| ' unless second param set
+  local outer=$indent
+  local inner="$indent| "
   local nice_name=$(fmt bold $module)
-  info "${indent}Disabling module $nice_name."
+
+  info "${outer}Disabling module $nice_name."
   if [[ -h "$MODS_ENABLED/$module" ]]; then
-    uninstall_module "$module" "$indent- "
+    uninstall_module "$module" "$inner"
     rm -f "$MODS_ENABLED/$module"
     if [[ -d "$MODS_AVAILABLE/$module" ]]; then
-      okay "${indent}$nice_name is now disabled and can be reenabled" \
-        "with $(fmt bold "enmod $module")."
+      :
+      #info "${inner}Modules $nice_name is now disabled and can be reenabled" \
+      #  "with $(fmt bold "enmod $module")."
     else
-      okay "${indent}$nice_name is now disabled and cannot be reenabled" \
+      info "${inner}Module $nice_name is now disabled and cannot be reenabled" \
         "because it was nonstandard."
     fi
   else
     if [[ -d "$MODS_AVAILABLE/$module" ]]; then
-      info "${indent}$nice_name was already disabled."
+      info "${inner}Module $nice_name was already disabled."
     else
-      info "${indent}$nice_name was not enabled and cannot be enabled."
+      info "${inner}Module $nice_name was not enabled and cannot be enabled."
     fi
   fi
-  okay "${indent}Done."
+  okay "${outer}Done."
 }
 alias dismod='disable_module'
 
@@ -306,31 +327,38 @@ alias dismod='disable_module'
 install_module () {
   local module=$1
   local indent=${2:-} # empty string unless second param set
+  local outer=$indent
+  local inner="$indent| "
   local nice_name=$(fmt bold "$module")
   local count=0
+
   if [[ ! -h "$MODS_ENABLED/$module" ]]; then
-    fail "${indent}Cannot find module $nice_name."
+    fail "${outer}Cannot find module $nice_name."
     return 1
   fi
-  install_module_dotfiles "$module" "$indent- "
-  info "${indent}Checking for module $nice_name installers."
+
+  install_module_dotfiles "$module" "$outer"
+
+  # Run any install scripts, named install*.[ba]sh
+  info "${outer}Checking for module $nice_name installers."
   for file in "$MODS_ENABLED/$module"/install*; do
     case $file in
       *.sh | *.bash )
-        info "${indent}Executing installer $(fmt bold "$file")."
+        info "${inner}Executing installer $(fmt bold "$file")."
         (( count++ ))
         source "$file"
         ;;
       * )
-        fail "${indent}Found $(fmt bold "$file"), but installers must" \
+        fail "${inner}Found $(fmt bold "$file"), but installers must" \
           "end in $(fmt bold ".sh") or $(fmt bold ".bash")."
         return 1
         ;;
     esac
   done
-  (( count == 0 )) && info "${indent}Module $nice_name has no installers."
-  update_module "$module" "$indent- "
-  (( count != 0 )) && okay "${indent}Done."
+  (( count == 0 )) && info "${inner}Module $nice_name has no installers."
+  okay "${outer}Done."
+
+  update_module "$module" "$outer"
 }
 
 #######################################
@@ -346,37 +374,77 @@ install_module () {
 update_module () {
   local module=$1
   local indent=${2:-} # empty string unless second param set
+  local outer=$indent
+  local inner="$indent| "
   local nice_name=$(fmt bold "$module")
   local count=0
+
   if [[ ! -h "$MODS_ENABLED/$module" ]]; then
-    fail "${indent}Cannot find module $nice_name."
+    fail "${outer}Cannot find module $nice_name."
     return 1
   fi
-  info "${indent}Checking for module $nice_name updaters."
+
+  # Run any update scripts, named update*.[ba]sh
+  info "${outer}Checking for module $nice_name updaters."
   for file in "$MODS_ENABLED/$module"/update*; do
     case $file in
       *.sh | *.bash )
-        info "${indent}Executing updater $(fmt bold "$file")."
+        info "${inner}Executing updater $(fmt bold "$file")."
         (( count++ ))
         source "$file"
         ;;
       * )
-        fail "${indent}Found $(fmt bold "$file"), but updaters must" \
+        fail "${inner}Found $(fmt bold "$file"), but updaters must" \
           "end in $(fmt bold ".sh") or $(fmt bold ".bash")."
         return 1
         ;;
     esac
   done
-  (( count == 0 )) && info "${indent}Module $nice_name has no updaters."
-  local brewfile=$MODS_ENABLED/$module/Brewfile
-  if [[ -f $brewfile ]]; then
-    info "${indent}Checking for module $nice_name Homebrew updates."
-    if ! brew bundle check --file="$brewfile"; then
-      info "${indent}Installing module $nice_name Homebrew updates."
-      brew bundle --file="$brewfile"
+  (( count == 0 )) && info "${inner}Module $nice_name has no updaters."
+  okay "${outer}Done."
+
+  # Process any package manifests, named Brewfile
+  local manifest=$MODS_ENABLED/$module/Brewfile
+  if [[ -f $manifest ]]; then
+    if [[ ! -h "$MODS_ENABLED/brew" ]]; then
+      fail "${outer}Need module $(fmt bold "brew") to process manifest."
+      disable_module "$module" "$inner"
+      user "Run command: $(fmt bold "enmod brew")"
+      return 1
     fi
+    info "${outer}Checking for module $nice_name package updates."
+    if ! brew bundle check --file="$manifest" > /dev/null; then
+
+      info "${inner}Installing module $nice_name package updates."
+      # run update command and fix any "already app" errors 
+      if ! command_log=$(brew bundle --file="$manifest"); then
+        # disabling version that outputs by default. let's hide unless cannot resolve
+        # /dev/tty idea from http://stackoverflow.com/a/12451419/172602 comment
+        #if ! command_log=$(brew bundle --file="$manifest" | tee /dev/tty); then
+        info "${inner}| Updates failed. Attempting resolution."
+        command_log=$(echo "$command_log" | grep 'It seems there is already an App')
+        local resolution=0
+        local line
+        while read -r line; do
+          line=${line#*already an App at \'}
+          line=${line%\'.}
+          trash_file "$line" "$inner| " || resolution=1
+        done <<< "$command_log"
+        if (( resolution == 1 )); then
+          fail "${inner}| Could not resolve. Here is the log of what failed."
+          echo "$command_log"
+          return resolution
+        else
+          info "${inner}| Successfully resolved errors. Updating again."
+          command_log=$(brew bundle --file="$manifest") ||
+            { echo "$command_log"; return 1; }
+        fi
+      fi
+      okay "${inner}Done."
+
+    fi
+    okay "${outer}Done."
   fi
-  okay "${indent}Done."
 }
 
 #######################################
@@ -392,29 +460,80 @@ update_module () {
 uninstall_module () {
   local module=$1
   local indent=${2:-} # empty string unless second param set
+  local outer=$indent
+  local inner="$indent| "
   local nice_name=$(fmt bold "$module")
   local count=0
+  local line
   if [[ ! -h "$MODS_ENABLED/$module" ]]; then
-    fail "${indent}Cannot find module $nice_name."
+    fail "${outer}Cannot find module $nice_name."
     return 1
   fi
-  info "${indent}Checking for module $nice_name uninstallers."
+
+  # Run any uninstall scripts, named uninstall*.[ba]sh
+  info "${outer}Checking for module $nice_name uninstallers."
   for file in "$MODS_ENABLED/$module"/uninstall*; do
     case $file in
       *.sh | *.bash )
-        info "${indent}Executing uninstaller $(fmt bold "$file")."
+        info "${inner}Executing uninstaller $(fmt bold "$file")."
         (( count++ ))
         source "$file"
         ;;
       * )
-        fail "${indent}Found $(fmt bold "$file"), but uninstallers must" \
+        fail "${inner}Found $(fmt bold "$file"), but uninstallers must" \
           "end in $(fmt bold ".sh") or $(fmt bold ".bash")."
         return 1
         ;;
     esac
   done
-  (( count > 0 )) || info "${indent}Module $nice_name has no uninstallers."
-  okay "${indent}Done."
+  (( count > 0 )) || info "${inner}Module $nice_name has no uninstallers."
+  okay "${outer}Done."
+
+  # Uninstall packages from manifests, named Brewfile
+  local manifest=$MODS_ENABLED/$module/Brewfile
+  if [[ -f $manifest ]]; then
+    info "${outer}Checking for module $nice_name manifest packages to remove."
+    cat "$manifest" | tr -s " " | # squash spaces and pass to loop
+    {
+      while read -r line; do
+        line=${line%,*} # keep up to first comma
+        line=${line//\'/} # hope package names don't contain single quotes
+        line=${line//\"/} # hope package names don't contain double quotes
+        case $line in
+          '#'* ) ;; # ignore comments
+          'brew '* )
+            brew uninstall "${line#brew }"
+            ;;
+          'cask '* )
+            brew cask uninstall "${line#cask }"
+            ;;
+          'mas '*  )
+            trash_file "/Applications/${line#mas }.app" "$inner"
+            ;;
+          *  )
+            info "${inner}Unsure how to handle line:"
+            info "${inner}| $(fmt bold "$line")"
+            ;;
+        esac
+      done
+    }
+    okay "${outer}Done."
+  fi
+}
+
+trash_file () {
+  local item=$1
+  local indent=${2:-} # empty string unless second param set
+  if [[ -d $item || -f $item ]]; then
+    info "${indent}Trashing $(fmt bold "$item")"
+    if test ! $(which trash); then
+      brew install trash
+      trash "$item"
+      brew uninstall trash
+    else
+      trash "$item"
+    fi
+  fi
 }
 
 #######################################
@@ -430,21 +549,25 @@ uninstall_module () {
 install_module_dotfiles () {
   local module=$1
   local indent=${2:-} # empty string unless second param set
+  local outer=$indent
+  local inner="$indent| "
   local nice_name=$(fmt bold "$module")
   local count=0
-  if [[ -h "$MODS_ENABLED/$module" ]]; then
-    info "${indent}Checking for module $nice_name dotfiles."
-    for src in "$MODS_ENABLED/$module"/*.symlink; do
-      dst="$HOME/.$(basename "${src%.*}")"
-      link_file "$src" "$dst" "$indent- "
-      (( count++ ))
-    done
-    (( count > 0 )) || info "${indent}Module $nice_name has no dotfiles."
-  else
-    fail "${indent}Cannot find module $nice_name."
+
+  if [[ ! -h "$MODS_ENABLED/$module" ]]; then
+    fail "${outer}Cannot find module $nice_name."
     return 1
   fi
-  okay "${indent}Done."
+
+  info "${outer}Checking for module $nice_name dotfiles."
+  for src in "$MODS_ENABLED/$module"/*.symlink; do
+    dst="$HOME/.$(basename "${src%.*}")"
+    link_file "$src" "$dst" "$inner"
+    (( count++ ))
+  done
+  (( count > 0 )) || info "${inner}Module $nice_name has no dotfiles."
+
+  okay "${outer}Done."
 }
 
 #######################################
@@ -458,8 +581,11 @@ install_module_dotfiles () {
 #######################################
 cleanup () {
   local indent=${1:-} # empty string unless second param set
+  local outer=$indent
+  local inner="$indent| "
   local brewcommand="find -H \"$DOTFILES_ROOT\" -not \( -path available -prune \) -name Brewfile -print0 | xargs -0 cat | brew bundle cleanup --file=-"
   local result
+  local action
   eval "result=\$($brewcommand)"
   if [[ $result =~ 'Would uninstall formulae' ]]; then
     info "${indent}The following Homebrew programs that were manually installed:"
@@ -501,29 +627,16 @@ cleanup () {
 main () {
   info 'Installing.'
 
-  # Make sure we have brew bundle and mac app store tie in
-  if [ "$(uname -s)" == "Darwin" ]
-  then
-    brew tap Homebrew/bundle
-    if ! brew ls --versions mas > /dev/null; then
-      brew install mas
-    fi
-    local brewfile=$DOTFILES_ROOT/Brewfile
-    if [[ -f $brewfile ]]; then
-      info 'Checking for Homebrew updates.'
-      if ! brew bundle check --file="$brewfile" > /dev/null; then
-        info 'Installing Homebrew updates.'
-        brew bundle --file="$brewfile"
-      fi
-    fi
-    cleanup '- '
-  fi
+  enmod brew
+  enmod games
+  enmod chat
 
   #enmod git
   #dismod git
 
-  okay "Done."
 
+  #cleanup '| '
+  okay "Done."
 }
 
 main "$@"

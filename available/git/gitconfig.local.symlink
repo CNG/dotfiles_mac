@@ -1,5 +1,0 @@
-[user]
-        name = d
-        email = d
-[credential]
-        helper = osxkeychain

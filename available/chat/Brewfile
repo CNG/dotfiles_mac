@@ -1,0 +1,9 @@
+cask 'skype'
+# mas 'LINE', id: 539883307
+cask 'slack'
+# mas 'Slack', id: 803453959
+# cask 'textual'
+mas 'Textual', id: 896450579
+# mas 'Trillian', id: 412056820
+mas 'Twitter', id: 409789998
+

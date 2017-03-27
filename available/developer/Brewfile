@@ -1,0 +1,57 @@
+# IDEs
+mas 'Xcode', id: 497799835
+cask 'coda'
+
+# console and ssh
+cask 'iterm2'
+brew 'openssl'
+brew 'keychain'
+
+# text editors
+cask 'sublime-text'
+cask 'macdown'
+cask 'bbedit'
+cask 'hex-fiend'
+
+# databases and editors
+cask 'sequel-pro'
+brew 'sqlite'
+brew 'gdbm' #GNU database manager
+
+# file transfer
+#cask 'transmit'
+mas 'Transmit', id: 403388562
+
+# virtualization
+cask 'parallels-desktop'
+
+# filesystem tools
+cask 'carbon-copy-cloner'
+
+# programming
+brew 'python3'
+brew 'gnu-getopt'
+
+# libraries
+brew 'pcre' #Perl compatible regular expressions library
+brew 'gettext' #GNU internationalization (i18n) and localization (l10n) library
+brew 'libtool' #Generic library support script
+#brew 'xz' #General-purpose data compression with high compression ratio
+
+# utilities
+brew 'coreutils'
+brew 'rdfind'
+brew 'rename'
+brew 'trash'
+brew 'watch'
+brew 'wget'
+brew 'readline'
+brew 'homebrew/dupes/grep', args: ['with-default-names']
+brew 'homebrew/dupes/make'
+brew 'homebrew/dupes/rsync'
+
+# compiling
+brew 'autoconf' #Automatic configure script builder
+brew 'automake' #Tool for generating GNU Standards-compliant Makefiles
+brew 'pkg-config' #Manage compile and link flags for libraries
+

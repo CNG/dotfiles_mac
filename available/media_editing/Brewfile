@@ -1,0 +1,29 @@
+# utilities
+brew 'lame'
+#brew 'libogg'
+#brew 'sox'
+brew 'libvo-aacenc' # VisualOn AAC encoder library
+brew 'x264'
+brew 'xvid'
+brew 'ffmpeg'
+cask 'makemkv'
+brew 'media-info'
+cask 'mediainfo'
+#mas 'MediaInfo', id: 510620098
+
+# editors
+mas 'Easy Video Trim', id: 625963401
+mas 'iMovie', id: 408981434
+
+# conversion and compression
+cask 'handbrake'
+#mas 'Smart Converter Pro', id: 450078312
+#mas 'Music Speed Changer', id: 813546051
+
+# recorders
+mas 'Camera Record Pro', id: 1056029469
+mas 'Quick Recorder', id: 1020149961
+
+# mp3 editor, I think
+mas 'Tag Editor Free', id: 984278082
+

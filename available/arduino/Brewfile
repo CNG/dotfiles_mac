@@ -1,0 +1,9 @@
+# Prototyping PCB layouts
+cask 'fritzing'
+
+# Normal Arduino IDE
+cask 'arduino'
+
+# Arduino IDE with Adafruit stuff preloaded
+# cask 'adafruit-arduino'
+

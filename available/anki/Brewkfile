@@ -1,0 +1,9 @@
+# smart flashcards
+cask 'anki'
+
+# math latex
+brew 'gmp'
+brew 'mpfr'
+brew 'libmpc' #C library for the arithmetic of high precision complex numbers
+brew 'isl' #Integer Set Library for the polyhedral model
+
