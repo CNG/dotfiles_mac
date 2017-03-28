@@ -1,18 +1,16 @@
-MODULE_PATH=$MODS_AVAILABLE/git
-readonly MODULE_PATH
-
 #######################################
 # Create local Git config file based on user input.
 # Basically lifted from @holman/dotfiles.
 # Globals:
-#   MODULE_PATH (string) Path to this module.
+#   MODS_ALL (string) Path to all modules that can be installed.
 # Arguments:
 #   None
 # Returns:
 #   Prints actions taken.
 #######################################
 create_local_config() {
-  local target_file=$MODULE_PATH/gitconfig.local.symlink
+  local path=$MODS_ALL/git
+  local target_file=$path/gitconfig.local.symlink
   if [[ ! -f $target_file ]]; then
     info "${indent}- Creating local Git config."
 

@@ -26,3 +26,5 @@ install_brew () {
     okay "Done."
   fi
 }
+
+install_brew
