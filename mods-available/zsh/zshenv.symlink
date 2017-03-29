@@ -1,0 +1,27 @@
+export MAINSTORAGE="/Volumes/Striped"
+export COLDSTORAGE="/Volumes/Minerva"
+export UTILITIES="$MAINSTORAGE/Documents/Projects/Utilities"
+export PATH=$UTILITIES:$PATH
+export CRONLOG=~"/cron.log"
+
+msg() { echo "$(date "+%Y-%m-%d %H:%M:%S"): $@" }
+
+# make functions for each script for easy reference in crontab
+# for f in $UTILITIES/*.sh; do
+#   eval "$(basename "${f%.sh}")() { . $f >> $CRONLOG 2>&1 }"
+# done
+for file in $UTILITIES/*; do
+  if [[ -x $file ]]; then
+    eval "$(basename "$file")() { . $file |& tee -a $CRONLOG 2>&1 }"
+  fi
+done
+
+android_backup() {
+  $UTILITIES/android_backup/android_backup \
+    --mobile-host='CHARLIE-PHONE' \
+    --mobile-port 2222 \
+    --mobile-key='/data/data/com.arachnoid.sshelper/home/.ssh/id_rsa' \
+    --backup-host='CHARLIE-DESKTOP' \
+    --backup-dir="$MAINSTORAGE/Backups/Phones/current" \
+    |& tee -a $CRONLOG 2>&1
+}
