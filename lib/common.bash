@@ -53,13 +53,16 @@ fmt() {
 # Globals:
 #   fmt  (function) Text formatting
 # Arguments:
-#   type  (string) Notice type: (i|info)|(u|user)|(o|okay)|(f|fail)
-#   text  (string) Text to be wrapped
+#   type   (string) Notice type: (i|info)|(u|user)|(o|okay)|(f|fail)
+#   level  (int) Indentation level. Default 0.. Defaults to 0.
+#   text   (string) Text to be wrapped
 # Returns:
 #   Prints given text prepended by 'info', ' >> ', 'pass' or 'FAIL'
 #######################################
 print_wrap () {
   local color= text=
+  local indent_text='| '
+  local indent
   case $1 in
     i | info ) color=blue    text='info' ;;
     u | user ) color=magenta text=' >> ' ;;
@@ -68,7 +71,15 @@ print_wrap () {
     * ) return 1 ;;
   esac
   shift
-  printf " %b" "\r  [$(fmt $color "$text")] $@\n"
+  if [[ ${1:-0} =~ ^[0-9]+$ ]]; then
+    local repeat_times=${1:-0}
+    local i
+    for (( i=1; i<=$repeat_times; i++)); do
+      indent="$indent$indent_text"
+    done
+    shift
+  fi
+  printf " %b" "\r  [$(fmt $color "$text")] $indent$@\n"
 }
 alias info='print_wrap i'
 alias user='print_wrap u'
@@ -80,30 +91,30 @@ alias fail='print_wrap f'
 # Globals:
 #   None
 # Arguments:
-#   item    (string) File or directory to trash
-#   indent  (string) Optional text to prepend to messages
+#   item  (string) File or directory to trash
+#   lvl   (int) Indentation level. Default 0.
 # Returns:
 #   None
 #######################################
 trash_file () {
   local item=$1
-  local indent=${2:-} # empty string unless second param set
+  local lvl=${2:-0} # 0 unless second param set
   [[ -d $item || -f $item ]] || return 1
-  info "${indent}Trashing $(fmt bold $item)."
+  info $lvl "Trashing $(fmt bold $item)."
   if test ! $(which trash); then
     if brew install trash; then
       if ! trash "$item"; then
-        fail "${indent}Failed to trash $(fmt bold $item)."
+        fail $lvl "Failed to trash $(fmt bold $item)."
         brew uninstall trash
         return 1
       fi
     else
-      info "${indent}Unable to install trash. Deleting $(fmt bold $item)."
+      info $lvl "Unable to install trash. Deleting $(fmt bold $item)."
       rm -rf "$item"
     fi
   else
     if ! trash "$item"; then
-      fail "${indent}Failed to trash $(fmt bold $item)."
+      fail $lvl "Failed to trash $(fmt bold $item)."
       return 1
     fi
   fi
@@ -113,81 +124,79 @@ trash_file () {
 # Install a module.
 # Globals:
 #   MODS_ALL (string) Path to all modules that can be installed.
-#   MODS_ON   (string) Path to symlinks indicating installed modules.
+#   MODS_ON  (string) Path to symlinks indicating installed modules.
 # Arguments:
 #   module  (string) Name of module
-#   indent  (string) Optional text to prepend to messages
+#   lvl     (int) Indentation level. Default 0.
 # Returns:
 #   None
 #######################################
 module_install () {
   local module=$1
-  local indent=${2:-} # '| ' unless second param set
-  local outer=$indent
-  local inner="$indent| "
+  local lvl=${2:-0} # 0 unless second param set
+  local lvl2=$(( lvl + 1 ))
   local nice_name=$(fmt bold $module)
 
   if [[ ! -d "$MODS_ALL/$module" ]]; then
     if [[ -h "$MODS_ON/$module" ]]; then
-      info "${outer}Module $nice_name is already installed," \
+      info $lvl "Module $nice_name is already installed," \
         "but it cannot be reinstalled because it is unavailable."
     else
-      fail "${outer}Cannot find module $nice_name."
+      fail $lvl "Cannot find module $nice_name."
     fi
     return 1
   fi
 
   if [[ -h "$MODS_ON/$module" ]]; then
-    info "${outer}Module $nice_name is already installed, but reinstalling."
+    info $lvl "Module $nice_name is already installed, but reinstalling."
   else
-    info "${outer}Installing module $nice_name."
+    info $lvl "Installing module $nice_name."
   fi
   trap_term_signal () {
-    fail "${inner}Termination signal received. Uninstalling."
-    module_remove "$module" "$inner"
+    fail $lvl2 "Termination signal received. Uninstalling."
+    module_remove "$module" $lvl2
     rm -f "$MODS_ON/$module"
     exit
   }
   trap_fail () {
-    user "${inner}Installation failed. Fix problem and repeat:" \
+    user $lvl2 "Installation failed. Fix problem and repeat:" \
       "$(fmt bold dotfiles install \"$module\")"
     rm -f "$MODS_ON/$module"
     exit
   }
   trap trap_term_signal INT TERM
   trap trap_fail EXIT
-  link_file "../${MODS_ALL##*/}/$module" "$MODS_ON" "$inner"
+  link_file "../${MODS_ALL##*/}/$module" "$MODS_ON" $lvl2
   #ln -s "../${MODS_ALL##*/}/$module" "$MODS_ON"
-  scripts_execute "$MODS_ON/$module" 'install' "$inner"
-  module_upgrade "$module" "$inner"
+  scripts_execute "$MODS_ON/$module" 'install' $lvl2
+  module_upgrade "$module" $lvl2
   trap - INT TERM EXIT
-  okay "${outer}Done."
+  okay $lvl "Done."
 }
 
 
 #######################################
 # Upgrade one or all enabled modules.
 # Globals:
-#   MODS_ON   (string) Path to symlinks indicating installed modules.
+#   MODS_ON  (string) Path to symlinks indicating installed modules.
 # Arguments:
 #   module  (string) Name of module or "--all"
-#   indent  (string) Optional text to prepend to messages
+#   lvl     (int) Indentation level. Default 0.
 # Returns:
 #   None
 #######################################
 module_upgrade () {
   local module=$1
-  local indent=${2:-} # '| ' unless second param set
-  local outer=$indent
-  local inner="$indent| "
+  local lvl=${2:-0} # 0 unless second param set
+  local lvl2=$(( lvl + 1 ))
 
   # If -all flag, recurse
   if [[ $module == --all ]]; then
-    info "${outer}Upgrading all installed modules."
+    info $lvl "Upgrading all installed modules."
     for module in "$MODS_ON"/*; do
-      module_upgrade "${module##*/}" "$inner"
+      module_upgrade "${module##*/}" $lvl2
     done
-    okay "${outer}Done."
+    okay $lvl "Done."
     return 0
   fi
 
@@ -196,46 +205,45 @@ module_upgrade () {
   local path=$MODS_ON/$module
 
   if [[ ! -h $path ]]; then
-    fail "${outer}Module $nice_name is not installed."
+    fail $lvl "Module $nice_name is not installed."
     return 1
   fi
 
-  info "${outer}Upgrading module $nice_name."
-  scripts_execute "$path" 'upgrade' "$inner"
-  packages_upgrade "$path/Brewfile" "$inner"
-  dotfiles_install "$path" "$inner"
-  okay "${outer}Done."
+  info $lvl "Upgrading module $nice_name."
+  scripts_execute "$path" 'upgrade' $lvl2
+  packages_upgrade "$path/Brewfile" $lvl2
+  dotfiles_install "$path" $lvl2
+  okay $lvl "Done."
 }
 
 
 #######################################
 # Install or upgrade any packages listed in a manifest.
 # Globals:
-#   MODS_ON   (string) Path to symlinks indicating installed modules
+#   MODS_ON  (string) Path to symlinks indicating installed modules
 # Arguments:
 #   manifest  (string) Path of manifest which need not exist
-#   indent    (string) Optional text to prepend to messages
+#   lvl       (int) Indentation level. Default 0.
 # Returns:
 #   None
 #######################################
 packages_upgrade () {
   local manifest=$1
-  local indent=${2:-} # empty string unless second param set
-  local outer=$indent
-  local inner="$indent| "
+  local lvl=${2:-0} # 0 unless second param set
+  local lvl2=$(( lvl + 1 ))
   local line
-  info "${outer}Checking for packages to install or upgrade."
+  info $lvl "Checking for packages to install or upgrade."
   if [[ -f $manifest ]]; then
     if [[ ! -h "$MODS_ON/brew" ]]; then
-      fail "${inner}Need module $(fmt bold brew) to process manifest."
-      user "${inner}Retry after running: $(fmt bold dotfiles install brew)"
+      fail $lvl2 "Need module $(fmt bold brew) to process manifest."
+      user $lvl2 "Retry after running: $(fmt bold dotfiles install brew)"
       return 1
     fi
     if ! brew bundle check --file="$manifest" > /dev/null; then
       _packages_upgrade_recurse
     fi
   fi
-  okay "${outer}Done."
+  okay $lvl "Done."
 }
 _packages_upgrade_recurse () {
   # avoid infinite loop
@@ -246,9 +254,10 @@ _packages_upgrade_recurse () {
   # can output by ` | tee /dev/tty` http://stackoverflow.com/a/12451419/172602
   ! log=$(brew bundle --file="$manifest") || return 0
 
+  local lvl3=$(( lvl + 2 ))
   local fixes=0
   local p results result
-  info "${inner}Upgrades failed. Attempting to fix."
+  info $lvl2 "Upgrades failed. Attempting to fix."
 
   # fix any "already app" errors
   p='Error: It seems there is already an App at '"'"'.*?'"'"'.'
@@ -256,7 +265,7 @@ _packages_upgrade_recurse () {
     while read -r line; do
       line=${line#*already an App at \'}
       line=${line%\'.}
-      trash_file "$line" "$inner| " && (( fixes++ ))
+      trash_file "$line" $lvl3 && (( fixes++ ))
     done <<< "$results"
   fi
 
@@ -265,14 +274,14 @@ _packages_upgrade_recurse () {
   if results="$(echo "$log" | tr '\n' '\a' | grep -oE "$p")"; then
     while read -r result; do
       result="$(echo "$result" | tr '\a' '\n' | awk '$1 == "File:" {print $2}')"
-      trash_file "$result" "$inner| " && (( fixes++ ))
+      trash_file "$result" $lvl3 && (( fixes++ ))
     done <<< "$results"
   fi
 
   if (( fixes > 0 && safety < 2)); then
-    info "${inner}Resolved some errors. Upgrading again."
+    info $lvl2 "Resolved some errors. Upgrading again."
   elif (( safety < 3 )); then
-    info "${inner}Updating package manager, then upgrading again."
+    info $lvl2 "Updating package manager, then upgrading again."
     ( log=$(brew update) || echo $log )
     (( safety++ )) # avoid updating twice
   fi
@@ -280,7 +289,7 @@ _packages_upgrade_recurse () {
   if ! _packages_upgrade_recurse $safety; then
     if (( safety == 3 )); then
       # _packages_upgrade_recurse short circuited to false, end of line
-      fail "${inner}Could not resolve. Inspect log and resolve manually:"
+      fail $lvl2 "Could not resolve. Inspect log and resolve manually:"
       p='Error: .*?\aInstalling .*? has failed\!'
       echo "$log" | tr '\n' '\a' | grep -oE "$p" | tr '\a' '\n'
     fi
@@ -293,43 +302,42 @@ _packages_upgrade_recurse () {
 #######################################
 # Uninstall a module.
 # Globals:
-#   MODS_ALL (string) Path to all modules that can be installed.
+#   MODS_ALL  (string) Path to all modules that can be installed.
 #   MODS_ON   (string) Path to symlinks indicating installed modules.
 # Arguments:
 #   module  (string) Name of module
-#   indent  (string) Optional text to prepend to messages
+#   lvl     (int) Indentation level. Default 0.
 # Returns:
 #   None
 #######################################
 module_remove () {
   local module=$1
-  local indent=${2:-} # '| ' unless second param set
-  local outer=$indent
-  local inner="$indent| "
+  local lvl=${2:-0} # 0 unless second param set
+  local lvl2=$(( lvl + 1 ))
   local nice_name=$(fmt bold $module)
 
   if [[ ! -h "$MODS_ON/$module" ]]; then
     if [[ -d "$MODS_ALL/$module" ]]; then
-      info "${outer}Module $nice_name is not installed."
+      info $lvl "Module $nice_name is not installed."
     else
-      info "${outer}Module $nice_name is neither installed nor available."
+      info $lvl "Module $nice_name is neither installed nor available."
     fi
     return 0
   fi
 
   local path=$MODS_ON/$module
-  info "${outer}Removing module $nice_name."
-  dotfiles_install "$path" "$inner"
-  scripts_execute "$path" 'remove' "$inner"
-  packages_remove "$path/Brewfile" "$inner"
+  info $lvl "Removing module $nice_name."
+  dotfiles_install "$path" $lvl2
+  scripts_execute "$path" 'remove' $lvl2
+  packages_remove "$path/Brewfile" $lvl2
   rm -f "$path"
   if [[ ! -d "$MODS_ALL/$module" ]]; then
-    info "${inner}Module $nice_name is now removed," \
+    info $lvl2 "Module $nice_name is now removed," \
       "but it cannot be reinstalled because it is unavailable."
   fi
-  #info "${inner}Module $nice_name is now removed and can be reinstalled" \
+  #info $lvl2 "Module $nice_name is now removed and can be reinstalled" \
   #  "with $(fmt bold dotfiles install \"$module\")."
-  okay "${outer}Done."
+  okay $lvl "Done."
 }
 
 
@@ -338,106 +346,104 @@ module_remove () {
 # Globals:
 #   None
 # Arguments:
-#   path (string) Directory to search
-#   name (string) Find scripts starting with this and ending in .bash or .sh
+#   path  (string) Directory to search
+#   name  (string) Find scripts starting with this and ending in .bash or .sh
 # Returns:
 #   None
 #######################################
 scripts_execute () {
   local path=$1
   local name=$2
-  local indent=${3:-} # empty string unless second param set
-  local outer=$indent
-  local inner="$indent| "
+  local lvl=${3:-0} # 0 unless second param set
+  local lvl2=$(( lvl + 1 ))
   local count=0
 
   if [[ ! -h $path ]]; then
-    fail "${outer}Invalid path $(fmt bold $path)."
+    fail $lvl "Invalid path $(fmt bold $path)."
     return 1
   fi
 
-  info "${outer}Checking for $name scripts."
+  info $lvl "Checking for $name scripts."
   for file in "$path/$name"*; do
     case $file in
       *.sh | *.bash )
-        info "${inner}Executing $(fmt bold $file)."
+        info $lvl2 "Executing $(fmt bold $file)."
         (( count++ ))
         source "$file"
         ;;
       * )
-        fail "${inner}Found $(fmt bold $file), but scripts must" \
+        fail $lvl2 "Found $(fmt bold $file), but scripts must" \
           "end in $(fmt bold .sh) or $(fmt bold .bash)."
         return 1
         ;;
     esac
   done
-  (( count == 0 )) && info "${inner}No $name scripts found."
-  okay "${outer}Done."
+  (( count == 0 )) && info $lvl2 "No $name scripts found."
+  okay $lvl "Done."
 }
 
 #######################################
 # Symlink files named *.symlink to ~/.*
 # Globals:
-#   HOME   (string) Path to symlinks indicating installed modules.
+#   HOME  (string) Path to symlinks indicating installed modules.
 # Arguments:
-#   path (string) Directory to search
-#   indent  (string) Optional text to prepend to messages
+#   path  (string) Directory to search
+#   lvl   (int) Indentation level. Default 0.
 # Returns:
 #   None
 #######################################
 dotfiles_install () {
   local path=$1
-  local indent=${2:-} # empty string unless second param set
-  local outer=$indent
-  local inner="$indent| "
+  local lvl=${2:-0} # 0 unless second param set
+  local lvl2=$(( lvl + 1 ))
   local count=0
 
   if [[ ! -h $path ]]; then
-    fail "${outer}Invalid path $(fmt bold $path)."
+    fail $lvl "Invalid path $(fmt bold $path)."
     return 1
   fi
 
-  info "${outer}Checking for configuration files to link."
+  info $lvl "Checking for configuration files to link."
   for src in "$path"/*.symlink; do
     dst="$HOME/.$(basename "${src%.*}")"
-    link_file "$src" "$dst" "$inner"
+    link_file "$src" "$dst" $lvl2
     (( count++ ))
   done
-  (( count > 0 )) || info "${inner}No configuration files found."
-  okay "${outer}Done."
+  (( count > 0 )) || info $lvl2 "No configuration files found."
+  okay $lvl "Done."
 }
 
 #######################################
 # Undo dotfiles_install by removing symlinks in ~ corresponding to files
 # named *.symlink
 # Globals:
-#   HOME   (string) Path to symlinks indicating installed modules.
+#   HOME  (string) Path to symlinks indicating installed modules.
 # Arguments:
-#   path (string) Directory to search
-#   indent  (string) Optional text to prepend to messages
+#   path  (string) Directory to search
+#   lvl   (int) Indentation level. Default 0.
 # Returns:
 #   None
 #######################################
 dotfiles_remove () {
   local path=$1
-  local indent=${2:-} # empty string unless second param set
-  local outer=$indent
-  local inner="$indent| "
+  local lvl=${2:-0} # 0 unless second param set
+  local lvl2=$(( lvl + 1 ))
   local count=0
 
   if [[ ! -h $path ]]; then
-    fail "${outer}Invalid path $(fmt bold $path)."
+    fail $lvl "Invalid path $(fmt bold $path)."
     return 1
   fi
 
-  info "${outer}Checking for configuration files that need links removed."
+  info $lvl "Checking for configuration files that need links removed."
   for src in "$path"/*.symlink; do
-    #dst="$HOME/.$(basename "${src%.*}")"
-    #link_file "$src" "$dst" "$inner"
+    dst="$HOME/.$(basename "${src%.*}")"
+    user $lvl "You may want to delete or modify: $dst"
+    #TODO implement checking if backed up file exists and interactive mode
     (( count++ ))
   done
-  (( count > 0 )) || info "${inner}No configuration files found."
-  okay "${outer}Done."
+  (( count > 0 )) || info $lvl2 "No configuration files found."
+  okay $lvl "Done."
 }
 
 #######################################
@@ -446,21 +452,21 @@ dotfiles_remove () {
 #   None
 # Arguments:
 #   manifest  (string) Path of manifest which need not exist
-#   indent    (string) Optional text to prepend to messages
+#   lvl       (int) Indentation level. Default 0.
 # Returns:
 #   None
 #######################################
 packages_remove () {
   local manifest=$1
-  local indent=${2:-} # empty string unless second param set
-  local outer=$indent
-  local inner="$indent| "
+  local lvl=${2:-0} # 0 unless second param set
+  local lvl2=$(( lvl + 1 ))
+  local lvl3=$(( lvl + 2 ))
   local line
-  info "${outer}Checking for packages to remove."
+  info $lvl "Checking for packages to remove."
   if [[ -f $manifest ]]; then
     if [[ ! -h $MODS_ON/brew ]]; then
-      fail "${inner}Need module $(fmt bold brew) to process manifest."
-      user "${inner}Retry after running: $(fmt bold dotfiles install brew)"
+      fail $lvl2 "Need module $(fmt bold brew) to process manifest."
+      user $lvl2 "Retry after running: $(fmt bold dotfiles install brew)"
       return 1
     fi
     cat "$manifest" | tr -s " " | # squash spaces and pass to loop
@@ -483,29 +489,29 @@ packages_remove () {
           fi
           ;;
         'mas '*  )
-          trash_file "/Applications/${line#mas }.app" "$inner| "
+          trash_file "/Applications/${line#mas }.app" $lvl3
           ;;
         *  )
-          info "${inner}Unsure how to handle line:"
-          info "${inner}| $(fmt bold $line)"
+          info $lvl2 "Unsure how to handle line:"
+          info $lvl3 "$(fmt bold $line)"
           ;;
       esac
     done
 
   fi
-  okay "${outer}Done."
+  okay $lvl "Done."
 }
 
 #######################################
 # Create symlinks and prompt on conflict to skip, overwrite or backup.
 # Based on @holman/dotfiles but largely changed logic.
 # Globals:
-#   overwrite_all (bool) Optional flag
-#   backup_all    (bool) Optional flag
-#   skip_all      (bool) Optional flag
+#   overwrite_all  (bool) Optional flag
+#   backup_all     (bool) Optional flag
+#   skip_all       (bool) Optional flag
 # Arguments:
-#   src (file) Source file
-#   dst (file) Directory to put link
+#   src  (file) Source file
+#   dst  (file) Directory to put link
 # Returns:
 #   Prints actions taken.
 #######################################
@@ -518,31 +524,30 @@ link_file () {
   local src=$1 dst=$2
   [[ $src = ..* ]] && src=$( cd "$dst/$src" && pwd -P ) # resolve relative path
   [[ -d $dst ]] && dst=$dst/$(basename "$src") # aid detection of existing link
-  local indent=${3:-} # emptry string unless second param set
-  local outer=$indent
-  local inner="$indent| "
+  local lvl=${3:-0} # 0 unless second param set
+  local lvl2=$(( lvl + 1 ))
   local nicesrc=$(fmt bold $src)
   local nicedst=$(fmt bold $dst)
   local overwrite= backup= skip= # var=false breaks var=${var:-$var_all}
   local action=
 
-  info "${outer}Attempting to link to $(fmt bold $(basename "$src"))."
+  info $lvl "Attempting to link to $(fmt bold $(basename "$src"))."
 
   if ! [[ -f $src || -d $src || -L $src ]]; then
-    fail "${outer}Source file $nicesrc does not exist."
+    fail $lvl "Source file $nicesrc does not exist."
     return 1
   fi
 
   if [[ -f $dst || -d $dst || -L $dst ]]; then
     local currentSrc=$(readlink $dst)
     if [[ $currentSrc = $src ]]; then
-      # okay "${outer}$nicedst already points to $nicesrc"
+      # okay $lvl "$nicedst already points to $nicesrc"
       return 0
     fi
 
     if [[ $overwrite_all = false && $backup_all = false && $skip_all = false ]]; then
-      user "${inner}File $nicedst already exists. What do you want to do?"
-      user "${inner}[s]kip, [S]kip all," \
+      user $lvl2 "File $nicedst already exists. What do you want to do?"
+      user $lvl2 "[s]kip, [S]kip all," \
         '[o]verwrite, [O]verwrite all, [b]ackup, [B]ackup all'
       read -n 1 action
       case $action in
@@ -562,22 +567,22 @@ link_file () {
     skip=${skip:-$skip_all}
 
     if [[ $skip = true ]]; then
-      okay "${inner}Skipped $nicesrc."
+      okay $lvl2 "Skipped $nicesrc."
       return 0
     else
       if [[ $overwrite = true ]]; then
         rm -rf "$dst" &&
-        info "${inner}Removed $nicedst."
+        info $lvl2 "Removed $nicedst."
       elif [[ $backup = true ]]; then
         local bck="${dst}.$(date "+%Y%m%d_%H%M%S").backup"
         mv "$dst" "$bck" &&
-        info "${inner}Moved $nicedst to $(fmt bold $bck)."
+        info $lvl2 "Moved $nicedst to $(fmt bold $bck)."
       fi
     fi
   fi
 
   ln -s "$1" "$2" &&
-  okay "${outer}Linked $(fmt bold $2) to $(fmt bold $1)."
+  okay $lvl "Linked $(fmt bold $2) to $(fmt bold $1)."
 }
 
 #######################################
@@ -585,40 +590,39 @@ link_file () {
 # Globals:
 #   APP_ROOT  (string) Application directory.
 # Arguments:
-#   indent  (string) Optional text to prepend to messages
+#   lvl  (int) Indentation level. Default 0.
 # Returns:
 #   None
 #######################################
 packages_cleanup () {
-  local indent=${1:-} # empty string unless second param set
-  local outer=$indent
-  local inner="$indent| "
+  local lvl=${1:-0} # 0 unless second param set
+  local lvl2=$(( lvl + 1 ))
   local brewcommand="find -H \"$APP_ROOT\" -not \( -path available -prune \) -name Brewfile -print0 | xargs -0 cat | brew bundle cleanup --file=-"
   local result
   local action
   eval "result=\$($brewcommand)"
   if [[ $result =~ 'Would uninstall formulae' ]]; then
-    info "${outer}The following Homebrew programs were manually installed:"
+    info $lvl "The following Homebrew programs were manually installed:"
     result=$(echo "$result" | tail -n +2 | tr '\n' ',')
     result=${result%,}
-    info "${outer}$(fmt bold ${result//,/, })"
-    user "${outer}Uninstall?  $(fmt bold 'n/Y')"
+    info $lvl "$(fmt bold ${result//,/, })"
+    user $lvl "Uninstall?  $(fmt bold 'n/Y')"
     while read -n 1 action; do
       case $action in
-        n ) info "${inner}All right, they will be left alone." break ;;
+        n ) info $lvl2 "All right, they will be left alone." break ;;
         Y )
-          info "${inner}Uninstalling."
+          info $lvl2 "Uninstalling."
           eval "$brewcommand --force" > /dev/null
           if (( $? != 0 )); then
-            fail "${inner}Error uninstalling."
+            fail $lvl2 "Error uninstalling."
             return 1
           else
-            okay "${inner}Done."
+            okay $lvl2 "Done."
           fi
           break
           ;;
         * )
-          fail "${inner}$(fmt bold "$action") is not valid." \
+          fail $lvl2 "$(fmt bold "$action") is not valid." \
             "Enter $(fmt bold n) or $(fmt bold Y)."
           ;;
       esac

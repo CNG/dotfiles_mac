@@ -42,7 +42,7 @@ hdlr_tests () {
 
 main () {
   cd "$( dirname "${BASH_SOURCE[0]}" )"
-  case $1 in
+  case ${1:-} in
     install ) hdlr_install "${@:2}" ;;
     upgrade ) hdlr_upgrade "${@:2}" ;;
     remove  ) hdlr_remove  "${@:2}" ;;
