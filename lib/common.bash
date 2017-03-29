@@ -137,6 +137,16 @@ module_install () {
   local lvl2=$(( lvl + 1 ))
   local nice_name=$(fmt bold $module)
 
+  # If --all flag, recurse
+  if [[ $module == --all ]]; then
+    info $lvl "Installing all available modules."
+    for module in "$MODS_ALL"/*; do
+      module_install "${module##*/}" $lvl2
+    done
+    okay $lvl "Done."
+    return 0
+  fi
+
   if [[ ! -d "$MODS_ALL/$module" ]]; then
     if [[ -h "$MODS_ON/$module" ]]; then
       info $lvl "Module $nice_name is already installed," \
@@ -166,10 +176,13 @@ module_install () {
   }
   trap trap_term_signal INT TERM
   trap trap_fail EXIT
+  local path=$MODS_ON/$module
   link_file "../${MODS_ALL##*/}/$module" "$MODS_ON" $lvl2
   #ln -s "../${MODS_ALL##*/}/$module" "$MODS_ON"
-  scripts_execute "$MODS_ON/$module" 'install' $lvl2
-  module_upgrade "$module" $lvl2
+  packages_upgrade "$path/Brewfile" $lvl2
+  scripts_execute "$path" 'install' $lvl2
+  dotfiles_install "$path" $lvl2
+  scripts_execute "$path" 'upgrade' $lvl2
   trap - INT TERM EXIT
   okay $lvl "Done."
 }
@@ -190,7 +203,7 @@ module_upgrade () {
   local lvl=${2:-0} # 0 unless second param set
   local lvl2=$(( lvl + 1 ))
 
-  # If -all flag, recurse
+  # If --all flag, recurse
   if [[ $module == --all ]]; then
     info $lvl "Upgrading all installed modules."
     for module in "$MODS_ON"/*; do
@@ -252,7 +265,7 @@ _packages_upgrade_recurse () {
 
   # exit if upgrade successful, inverted due to set -e
   # can output by ` | tee /dev/tty` http://stackoverflow.com/a/12451419/172602
-  ! log=$(brew bundle --file="$manifest") || return 0
+  ! log=$(brew bundle --file="$manifest" | tee /dev/tty) || return 0
 
   local lvl3=$(( lvl + 2 ))
   local fixes=0
@@ -316,6 +329,16 @@ module_remove () {
   local lvl2=$(( lvl + 1 ))
   local nice_name=$(fmt bold $module)
 
+  # If --all flag, recurse
+  if [[ $module == --all ]]; then
+    info $lvl "Removing all installed modules."
+    for module in "$MODS_ALL"/*; do
+      module_remove "${module##*/}" $lvl2
+    done
+    okay $lvl "Done."
+    return 0
+  fi
+
   if [[ ! -h "$MODS_ON/$module" ]]; then
     if [[ -d "$MODS_ALL/$module" ]]; then
       info $lvl "Module $nice_name is not installed."
@@ -338,6 +361,55 @@ module_remove () {
   #info $lvl2 "Module $nice_name is now removed and can be reinstalled" \
   #  "with $(fmt bold dotfiles install \"$module\")."
   okay $lvl "Done."
+}
+
+
+#######################################
+# List modules by status.
+# Globals:
+#   MODS_ALL  (string) Path to all modules that can be installed.
+#   MODS_ON  (string) Path to symlinks indicating installed modules.
+# Arguments:
+#   status  (string) If not provided, separate lists of installed and not
+#     installed modules will be printed. Options are --not-installed,
+#     --installed, and --available
+# Returns:
+#   None
+#######################################
+module_list () {
+  local output
+  local module_available module_on module_test
+  case ${1:-} in
+    --installed )
+      for module_on in "$MODS_ON"/*; do
+        output="$output${module_on##*/} "
+      done
+      echo $(fmt bold $output)
+      ;;
+    --available )
+      for module_available in "$MODS_ALL"/*; do
+        output="$output${module_available##*/} "
+      done
+      echo $(fmt bold $output)
+      ;;
+    --not-installed )
+      for module_available in "$MODS_ALL"/*; do
+        module_test=false
+        for module_on in "$MODS_ON"/*; do
+          if [[ ${module_available##*/} = ${module_on##*/} ]]; then
+            module_test=true
+          fi
+        done
+        if [[ $module_test = false ]]; then
+          output="$output${module_available##*/} "
+        fi
+      done
+      echo $(fmt bold $output)
+      ;;
+    * )
+      info $lvl "These modules are installed:"
+      ;;
+  esac
 }
 
 

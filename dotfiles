@@ -6,6 +6,7 @@ APP_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd -P )"
 source 'lib/common.bash'
 
 hdlr_install () {
+  # does not default to --all
   (( $# == 0 )) && print_usage
   for module in "$@"; do
     module_install "$module"
@@ -13,6 +14,7 @@ hdlr_install () {
 }
 
 hdlr_upgrade () {
+  # defaults to --all
   if (( $# > 0 )); then
     for module in "$@"; do
       module_upgrade "$module"
@@ -23,6 +25,7 @@ hdlr_upgrade () {
 }
 
 hdlr_remove () {
+  # does not default to --all
   (( $# == 0 )) && print_usage
   for module in "$@"; do
     module_remove "$module"
@@ -32,6 +35,10 @@ hdlr_remove () {
 hdlr_cleanup () {
   (( $# == 0 )) || print_usage
   packages_cleanup
+}
+
+hdlr_list () {
+  module_list "$@"
 }
 
 hdlr_tests () {
@@ -47,6 +54,7 @@ main () {
     upgrade ) hdlr_upgrade "${@:2}" ;;
     remove  ) hdlr_remove  "${@:2}" ;;
     cleanup ) hdlr_cleanup "${@:2}" ;;
+    list    ) hdlr_list    "${@:2}" ;;
     tests   ) hdlr_tests   "${@:2}" ;;
     *       ) print_usage           ;;
   esac
