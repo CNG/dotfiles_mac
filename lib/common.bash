@@ -88,18 +88,23 @@ alias fail='print_wrap f'
 trash_file () {
   local item=$1
   local indent=${2:-} # empty string unless second param set
-  if [[ -d $item || -f $item ]]; then
-    info "${indent}Trashing $(fmt bold $item)."
-    if test ! $(which trash); then
-      if brew install trash; then
-        trash "$item"
+  [[ -d $item || -f $item ]] || return 1
+  info "${indent}Trashing $(fmt bold $item)."
+  if test ! $(which trash); then
+    if brew install trash; then
+      if ! trash "$item"; then
+        fail "${indent}Failed to trash $(fmt bold $item)."
         brew uninstall trash
-      else
-        info "${indent}Unable to install trash. Deleting $(fmt bold $item)."
-        rm -rf "$item"
+        return 1
       fi
     else
-      trash "$item"
+      info "${indent}Unable to install trash. Deleting $(fmt bold $item)."
+      rm -rf "$item"
+    fi
+  else
+    if ! trash "$item"; then
+      fail "${indent}Failed to trash $(fmt bold $item)."
+      return 1
     fi
   fi
 }
@@ -144,8 +149,8 @@ module_install () {
     exit
   }
   trap_fail () {
-    fail "${inner}Installation failed. Fix problem and repeat:"
-    user "${inner}$(fmt bold dotfiles install \"$module\")"
+    user "${inner}Installation failed. Fix problem and repeat:" \
+      "$(fmt bold dotfiles install \"$module\")"
     rm -f "$MODS_ON/$module"
     exit
   }
@@ -227,38 +232,63 @@ packages_upgrade () {
       return 1
     fi
     if ! brew bundle check --file="$manifest" > /dev/null; then
-
-      # run update command and fix any "already app" errors
-      if ! command_log=$(brew bundle --file="$manifest"); then
-        # disabling version that outputs by default. let's hide unless cannot resolve
-        # /dev/tty idea from http://stackoverflow.com/a/12451419/172602 comment
-        #if ! command_log=$(brew bundle --file="$manifest" | tee /dev/tty); then
-        info "${inner}Updates failed. Attempting resolution."
-        command_log=$(echo "$command_log" | grep 'It seems there is already an App')
-        local resolution=0 # return 1 if we couldn't resolve errors
-        local line
-        while read -r line; do
-          line=${line#*already an App at \'}
-          line=${line%\'.}
-          trash_file "$line" "$inner| " || resolution=1
-        done <<< "$command_log"
-        if (( resolution == 1 )); then
-          fail "${inner}Could not resolve. Here is the log of what failed."
-          echo "$command_log"
-          return resolution
-        fi
-        info "${inner}Resolved some errors. Updating again."
-        command_log=$(brew bundle --file="$manifest") || {
-          fail "${inner}Updates failed again. Resolve manually."
-          echo "$command_log"
-          return 1
-        }
-      fi
-
+      _packages_upgrade_recurse
     fi
   fi
   okay "${outer}Done."
 }
+_packages_upgrade_recurse () {
+  # avoid infinite loop
+  local safety=$(( ${1:-0} + 1 ))
+  (( safety <= 3 )) || return 1
+
+  # exit if upgrade successful, inverted due to set -e
+  # can output by ` | tee /dev/tty` http://stackoverflow.com/a/12451419/172602
+  ! log=$(brew bundle --file="$manifest") || return 0
+
+  local fixes=0
+  local p results result
+  info "${inner}Upgrades failed. Attempting to fix."
+
+  # fix any "already app" errors
+  p='Error: It seems there is already an App at '"'"'.*?'"'"'.'
+  if results="$(echo "$log" | tr '\n' '\a' | grep -oE "$p" | tr '\a' '\n')"; then
+    while read -r line; do
+      line=${line#*already an App at \'}
+      line=${line%\'.}
+      trash_file "$line" "$inner| " && (( fixes++ ))
+    done <<< "$results"
+  fi
+
+  # fix any "remove file" errors
+  p='File: .*?\a.*? remove the file above.'
+  if results="$(echo "$log" | tr '\n' '\a' | grep -oE "$p")"; then
+    while read -r result; do
+      result="$(echo "$result" | tr '\a' '\n' | awk '$1 == "File:" {print $2}')"
+      trash_file "$result" "$inner| " && (( fixes++ ))
+    done <<< "$results"
+  fi
+
+  if (( fixes > 0 && safety < 2)); then
+    info "${inner}Resolved some errors. Upgrading again."
+  elif (( safety < 3 )); then
+    info "${inner}Updating package manager, then upgrading again."
+    ( log=$(brew update) || echo $log )
+    (( safety++ )) # avoid updating twice
+  fi
+
+  if ! _packages_upgrade_recurse $safety; then
+    if (( safety == 3 )); then
+      # _packages_upgrade_recurse short circuited to false, end of line
+      fail "${inner}Could not resolve. Inspect log and resolve manually:"
+      p='Error: .*?\aInstalling .*? has failed\!'
+      echo "$log" | tr '\n' '\a' | grep -oE "$p" | tr '\a' '\n'
+    fi
+    return 1 # prop error up to outermost call!
+  fi
+
+}
+
 
 #######################################
 # Uninstall a module.
@@ -287,10 +317,12 @@ module_remove () {
     return 0
   fi
 
+  local path=$MODS_ON/$module
   info "${outer}Removing module $nice_name."
-  scripts_execute "$MODS_ON/$module" 'remove' "$inner"
-  packages_remove "$MODS_ON/$module/Brewfile" "$inner"
-  rm -f "$MODS_ON/$module"
+  dotfiles_install "$path" "$inner"
+  scripts_execute "$path" 'remove' "$inner"
+  packages_remove "$path/Brewfile" "$inner"
+  rm -f "$path"
   if [[ ! -d "$MODS_ALL/$module" ]]; then
     info "${inner}Module $nice_name is now removed," \
       "but it cannot be reinstalled because it is unavailable."
@@ -376,6 +408,39 @@ dotfiles_install () {
 }
 
 #######################################
+# Undo dotfiles_install by removing symlinks in ~ corresponding to files
+# named *.symlink
+# Globals:
+#   HOME   (string) Path to symlinks indicating installed modules.
+# Arguments:
+#   path (string) Directory to search
+#   indent  (string) Optional text to prepend to messages
+# Returns:
+#   None
+#######################################
+dotfiles_remove () {
+  local path=$1
+  local indent=${2:-} # empty string unless second param set
+  local outer=$indent
+  local inner="$indent| "
+  local count=0
+
+  if [[ ! -h $path ]]; then
+    fail "${outer}Invalid path $(fmt bold $path)."
+    return 1
+  fi
+
+  info "${outer}Checking for configuration files that need links removed."
+  for src in "$path"/*.symlink; do
+    #dst="$HOME/.$(basename "${src%.*}")"
+    #link_file "$src" "$dst" "$inner"
+    (( count++ ))
+  done
+  (( count > 0 )) || info "${inner}No configuration files found."
+  okay "${outer}Done."
+}
+
+#######################################
 # Remove any packages listed in a manifest.
 # Globals:
 #   None
@@ -399,29 +464,34 @@ packages_remove () {
       return 1
     fi
     cat "$manifest" | tr -s " " | # squash spaces and pass to loop
-    {
-      while read -r line; do
-        line=${line%,*} # keep up to first comma
-        line=${line//\'/} # hope package names don't contain single quotes
-        line=${line//\"/} # hope package names don't contain double quotes
-        case $line in
-          '#'* ) ;; # ignore comments
-          'brew '* )
-            brew uninstall "${line#brew }"
-            ;;
-          'cask '* )
-            brew cask uninstall "${line#cask }"
-            ;;
-          'mas '*  )
-            trash_file "/Applications/${line#mas }.app" "$inner| "
-            ;;
-          *  )
-            info "${inner}Unsure how to handle line:"
-            info "${inner}| $(fmt bold $line)"
-            ;;
-        esac
-      done
-    }
+    while read -r line; do
+      line=${line%,*} # keep up to first comma
+      line=${line//\'/} # hope package names don't contain single quotes
+      line=${line//\"/} # hope package names don't contain double quotes
+      case $line in
+        '#'* | '' | ' ' ) ;; # ignore comments and blank lines
+        'brew '* )
+          if ! log="$(brew uninstall "${line#brew }")"; then
+            echo "$log"
+            return 1
+          fi
+          ;;
+        'cask '* )
+          if ! log="$(brew cask uninstall "${line#cask }")"; then
+            echo "$log"
+            return 1
+          fi
+          ;;
+        'mas '*  )
+          trash_file "/Applications/${line#mas }.app" "$inner| "
+          ;;
+        *  )
+          info "${inner}Unsure how to handle line:"
+          info "${inner}| $(fmt bold $line)"
+          ;;
+      esac
+    done
+
   fi
   okay "${outer}Done."
 }
@@ -507,7 +577,7 @@ link_file () {
   fi
 
   ln -s "$1" "$2" &&
-  okay "${outer}Linked $(fmt bold $1) to $(fmt bold $2)."
+  okay "${outer}Linked $(fmt bold $2) to $(fmt bold $1)."
 }
 
 #######################################

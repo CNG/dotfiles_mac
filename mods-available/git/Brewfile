@@ -1,1 +1,2 @@
 brew 'git'
+brew 'hub'

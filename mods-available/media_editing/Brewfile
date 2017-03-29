@@ -6,7 +6,7 @@ brew 'libvo-aacenc' # VisualOn AAC encoder library
 brew 'x264'
 brew 'xvid'
 brew 'ffmpeg'
-cask 'makemkv'
+#cask 'makemkv'
 brew 'media-info'
 cask 'mediainfo'
 #mas 'MediaInfo', id: 510620098
