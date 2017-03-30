@@ -189,6 +189,35 @@ module_install () {
 
 
 #######################################
+# Reinstall one or all enabled modules.
+# Globals:
+#   MODS_ON  (string) Path to symlinks indicating installed modules.
+# Arguments:
+#   module  (string) Name of module or "--all"
+#   lvl     (int) Indentation level. Default 0.
+# Returns:
+#   None
+#######################################
+module_reinstall () {
+  local module=$1
+  local lvl=${2:-0} # 0 unless second param set
+  local lvl2=$(( lvl + 1 ))
+
+  # If --all flag, recurse
+  if [[ $module == --all ]]; then
+    info $lvl "Reinstalling all modules."
+    for module in "$MODS_ON"/*; do
+      module_install "${module##*/}" $lvl2
+    done
+    okay $lvl "Done."
+    return 0
+  fi
+
+  module_install "$module" $lvl2
+}
+
+
+#######################################
 # Upgrade one or all enabled modules.
 # Globals:
 #   MODS_ON  (string) Path to symlinks indicating installed modules.

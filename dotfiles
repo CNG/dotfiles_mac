@@ -13,6 +13,17 @@ hdlr_install () {
   done
 }
 
+hdlr_reinstall () {
+  # defaults to --all
+  if (( $# > 0 )); then
+    for module in "$@"; do
+      module_reinstall "$module"
+    done
+    return 0
+  fi
+  module_reinstall --all
+}
+
 hdlr_upgrade () {
   # defaults to --all
   if (( $# > 0 )); then
@@ -50,13 +61,14 @@ hdlr_tests () {
 main () {
   cd "$( dirname "${BASH_SOURCE[0]}" )"
   case ${1:-} in
-    install ) hdlr_install "${@:2}" ;;
-    upgrade ) hdlr_upgrade "${@:2}" ;;
-    remove  ) hdlr_remove  "${@:2}" ;;
-    cleanup ) hdlr_cleanup "${@:2}" ;;
-    list    ) hdlr_list    "${@:2}" ;;
-    tests   ) hdlr_tests   "${@:2}" ;;
-    *       ) print_usage           ;;
+    install   ) hdlr_install   "${@:2}" ;;
+    reinstall ) hdlr_reinstall "${@:2}" ;;
+    upgrade   ) hdlr_upgrade   "${@:2}" ;;
+    remove    ) hdlr_remove    "${@:2}" ;;
+    cleanup   ) hdlr_cleanup   "${@:2}" ;;
+    list      ) hdlr_list      "${@:2}" ;;
+    tests     ) hdlr_tests     "${@:2}" ;;
+    *         ) print_usage             ;;
   esac
 }
 
