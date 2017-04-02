@@ -1,0 +1,12 @@
+# my products and services
+cask 'backblaze'
+cask 'drobo-dashboard'
+cask 'folding-at-home'
+
+# network tools
+#cask 'peakhour'
+mas 'PeakHour 3', id: 961578824
+
+#other
+#mas 'Microsoft Remote Desktop', id: 715768417
+mas 'Stock + Pro', id: 534067900

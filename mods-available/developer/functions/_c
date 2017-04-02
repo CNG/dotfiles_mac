@@ -1,5 +1,9 @@
 #compdef c
-_files -W $PROJECTS -/
-_files -W $GOPATH/src/github.com -/
+if [[ $PROJECTS ]]; then
+  _files -W $PROJECTS -/
+fi
+if [[ $GOPATH ]]; then
+  _files -W $GOPATH/src/github.com -/
+fi
 
 # See further documentation in `functions/c`.

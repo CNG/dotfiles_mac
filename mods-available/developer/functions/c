@@ -1,5 +1,5 @@
 #!/bin/zsh
-#
+
 # This lets you quickly jump into a project directory.
 #
 # Type:
@@ -7,7 +7,7 @@
 #   c <tab>
 #
 # ...to autocomplete on all of your projects in the directories specified in
-# `functions/_c`. Typically I'm using it like:
+# `functions/_c`. Typical use:
 #
 #    c holm<tab>/bo<tab>
 #
@@ -17,8 +17,19 @@
 # autocomplete both on $PROJECTS, and also assume you want to autocomplete on
 # your Go projects in $GOPATH/src.
 
-if [ ! -z "$1" ] && [ -s "$GOPATH/src/github.com/$1" ]; then
-  cd "$GOPATH/src/github.com/$1"
+if [ ! -z "$1" ]
+  if [[ $GOPATH ]] && [[ -s $GOPATH/src/github.com/$1 ]]; then
+    cd "$GOPATH/src/github.com/$1"
+  fi
+  if [[ $PROJECTS ]]; then
+    cd "$PROJECTS/$1"
+  else
+    cd ~"/$1"
+  fi
 else
-  cd "$PROJECTS/$1"
+  if [[ $PROJECTS ]]; then
+    cd "$PROJECTS"
+  else
+    cd
+  fi
 fi

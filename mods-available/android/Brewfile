@@ -1,4 +1,4 @@
 cask 'android-sdk'
-cask 'android-ndk'
+brew 'android-ndk'
 cask 'android-studio'
 cask 'android-file-transfer'

@@ -1,40 +1,32 @@
-# shortcut to this dotfiles path is $ZSH
-export DOTFILES=$HOME/.dotfiles
+# .zshenv is always sourced, while .zshrc is only sourced in interactive shells
 
-# your project folder that we can `c [tab]` to
-export PROJECTS=/Volumes/Striped/Documents/Projects
 
-# Stash your environment variables in ~/.localrc. This means they'll stay out
-# of your main dotfiles repository (which may be public, like this one), but
-# you'll have access to them in your scripts.
-if [[ -a ~/.localrc ]]
-then
-  source ~/.localrc
+# Put private interactive shell definitions in ~/.zshrc.local
+# so they are ignored by Git and not inadvertently made public
+if [[ -a ~/.zshrc.local ]]; then
+  source ~/.zshrc.local
 fi
 
-# all of our zsh files
-typeset -U config_files
-config_files=($DOTFILES/mods-enabled/**/*.zsh)
+# Gather all config files in dictionary-like array
+typeset -U config_files # keep only one occurrence of each value
+config_files=($DOTFILES/mods-enabled/***/*.zsh) # *** recurses, follows symlinks
 
-# load the path files
-for file in ${(M)config_files:#*/path.zsh}
-do
+# Load the Oh-My-Zsh plugin files
+for file in ${(M)config_files:#*/plugins*}; do
   source $file
 done
 
-# load everything but the path and completion files
-for file in ${${config_files:#*/path.zsh}:#*/completion.zsh}
-do
+# Load all but env, completion and plugin files
+for file in ${${${config_files:#*/env*}:#*/completion*}:#*/plugins*}; do
   source $file
 done
 
-# initialize autocomplete here, otherwise functions won't be loaded
+# Initialize autocomplete here so functions will load
 autoload -U compinit
 compinit
 
-# load every completion after autocomplete loads
-for file in ${(M)config_files:#*/completion.zsh}
-do
+# Load every completion after autocomplete loads
+for file in ${(M)config_files:#*/completion*}; do
   source $file
 done
 

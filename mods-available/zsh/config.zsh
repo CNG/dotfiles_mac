@@ -1,10 +1,6 @@
 export LSCOLORS="exfxcxdxbxegedabagacad"
 export CLICOLOR=true
 
-fpath=($DOTFILES/functions $fpath)
-
-autoload -U $DOTFILES/functions/*(:t)
-
 HISTFILE=~/.zsh_history
 HISTSIZE=1000000
 SAVEHIST=1000000

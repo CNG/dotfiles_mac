@@ -1,0 +1,13 @@
+# text editors
+cask 'bbedit'
+
+# databases and editors
+cask 'sequel-pro'
+brew 'sqlite'
+brew 'gdbm' #GNU database manager
+
+# virtualization
+cask 'parallels-desktop'
+
+# filesystem tools
+cask 'carbon-copy-cloner'

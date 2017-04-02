@@ -10,23 +10,11 @@ brew 'keychain'
 # text editors
 cask 'sublime-text'
 cask 'macdown'
-cask 'bbedit'
 cask 'hex-fiend'
-
-# databases and editors
-cask 'sequel-pro'
-brew 'sqlite'
-brew 'gdbm' #GNU database manager
 
 # file transfer
 #cask 'transmit'
 mas 'Transmit', id: 403388562
-
-# virtualization
-cask 'parallels-desktop'
-
-# filesystem tools
-cask 'carbon-copy-cloner'
 
 # programming
 brew 'python3'
@@ -54,4 +42,3 @@ brew 'homebrew/dupes/rsync'
 brew 'autoconf' #Automatic configure script builder
 brew 'automake' #Tool for generating GNU Standards-compliant Makefiles
 brew 'pkg-config' #Manage compile and link flags for libraries
-
