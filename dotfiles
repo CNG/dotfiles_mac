@@ -1,16 +1,27 @@
 #!/usr/bin/env bash
 
-# Manager for @CNG's system configuration
+# Top level manager for @CNG's system configuration scripts
 
-APP_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd -P )"
-source 'lib/common.bash'
+# Script location determination accounting for symlinked script name
+# http://stackoverflow.com/a/246128/172602
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
+  DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+  SOURCE="$(readlink "$SOURCE")"
+  [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE" # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
+done
+APP_ROOT="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+source "$APP_ROOT/lib/common.bash"
 
 hdlr_install () {
-  # does not default to --all
-  (( $# == 0 )) && print_usage
-  for module in "$@"; do
-    module_install "$module"
-  done
+  # defaults to base
+  if (( $# > 0 )); then
+    for module in "$@"; do
+      module_install "$module"
+    done
+    return 0
+  fi
+  module_install base
 }
 
 hdlr_reinstall () {
@@ -54,7 +65,7 @@ hdlr_list () {
 
 hdlr_tests () {
   (( $# == 0 )) || print_usage
-  source 'lib/tests.bash'
+  source "$APP_ROOT/lib/tests.bash"
   main_tests
 }
 
@@ -68,7 +79,7 @@ main () {
     cleanup   ) hdlr_cleanup   "${@:2}" ;;
     list      ) hdlr_list      "${@:2}" ;;
     tests     ) hdlr_tests     "${@:2}" ;;
-    *         ) print_usage             ;;
+    * | help  ) print_usage             ;;
   esac
 }
 

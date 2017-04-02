@@ -16,7 +16,35 @@ shopt -s nullglob
 
 
 print_usage () {
-  echo "Usage: $0 [ install | test ]"
+  echo "Usage: $0 $(fmt under '<command>') [$(fmt under '<args>')]
+
+    $(fmt bold 'install')   [ $(fmt under 'module') $(fmt under '...') | $(fmt bold '--all') ]
+              Install required module $(fmt bold base), $(fmt under 'module') $(fmt under '...') or all available modules.
+
+    $(fmt bold 'reinstall') [ $(fmt under 'module') $(fmt under '...') ]
+              Reinstall all installed modules or $(fmt under 'module') $(fmt under '...').
+
+    $(fmt bold 'upgrade')   [ $(fmt under 'module') $(fmt under '...') ]
+              Upgrade all installed modules or $(fmt under 'module') $(fmt under '...').
+
+    $(fmt bold 'remove')    $(fmt under 'module') $(fmt under '...') | $(fmt bold '--all')
+              Remove $(fmt under 'module') $(fmt under '...') or all installed modules.
+
+    $(fmt bold 'cleanup')   Uninstall any installed $(fmt bold 'brew') packages that are not required by
+              currently installed modules. This does not run any module scripts
+              or modify symbolic links but only analyzes the required package
+              manifests in each installed module and removes any extras that
+              were installed manually or by a module that has since changed.
+
+    $(fmt bold 'list')      [ $(fmt bold '--installed') | $(fmt bold '--available') | $(fmt bold '--not-installed') ]
+              List modules that are installed, available to install or available
+              to install but not installed. If no option is specified, lists
+              installed and available but not installed.
+
+    $(fmt bold 'tests')     Run a nonexhaustive battery of internal tests.
+
+    $(fmt bold 'help')      Show this help page.
+  "
   return 1
 }
 
@@ -140,7 +168,9 @@ module_install () {
   # If --all flag, recurse
   if [[ $module == --all ]]; then
     info $lvl "Installing all available modules."
+    module_install base $lvl2
     for module in "$MODS_ALL"/*; do
+      [[ ${module##*/} = base ]] && continue
       module_install "${module##*/}" $lvl2
     done
     okay $lvl "Done."
@@ -178,7 +208,6 @@ module_install () {
   trap trap_fail EXIT
   local path=$MODS_ON/$module
   link_file "../${MODS_ALL##*/}/$module" "$MODS_ON" $lvl2
-  #ln -s "../${MODS_ALL##*/}/$module" "$MODS_ON"
   packages_upgrade "$path/Brewfile" $lvl2
   scripts_execute "$path" 'install' $lvl2
   dotfiles_install "$path" $lvl2
@@ -191,6 +220,7 @@ module_install () {
 #######################################
 # Reinstall one or all enabled modules.
 # Globals:
+#   MODS_ALL (string) Path to all modules that can be installed.
 #   MODS_ON  (string) Path to symlinks indicating installed modules.
 # Arguments:
 #   module  (string) Name of module or "--all"
@@ -207,13 +237,19 @@ module_reinstall () {
   if [[ $module == --all ]]; then
     info $lvl "Reinstalling all modules."
     for module in "$MODS_ON"/*; do
-      module_install "${module##*/}" $lvl2
+      module_reinstall "${module##*/}" $lvl2
     done
     okay $lvl "Done."
     return 0
   fi
 
-  module_install "$module" $lvl2
+  # same steps as module_install but without uninstalling on trap
+  local path=$MODS_ON/$module
+  link_file "../${MODS_ALL##*/}/$module" "$MODS_ON" $lvl2
+  packages_upgrade "$path/Brewfile" $lvl2
+  scripts_execute "$path" 'install' $lvl2
+  dotfiles_install "$path" $lvl2
+  scripts_execute "$path" 'upgrade' $lvl2
 }
 
 
@@ -276,9 +312,9 @@ packages_upgrade () {
   local line
   info $lvl "Checking for packages to install or upgrade."
   if [[ -f $manifest ]]; then
-    if [[ ! -h "$MODS_ON/brew" ]]; then
-      fail $lvl2 "Need module $(fmt bold brew) to process manifest."
-      user $lvl2 "Retry after running: $(fmt bold dotfiles install brew)"
+    if [[ ! -h "$MODS_ON/base" ]]; then
+      fail $lvl2 "Need module $(fmt bold base) to process manifest."
+      user $lvl2 "Retry after running: $(fmt bold dotfiles install base)"
       return 1
     fi
     if ! brew bundle check --file="$manifest" > /dev/null; then
@@ -362,8 +398,10 @@ module_remove () {
   if [[ $module == --all ]]; then
     info $lvl "Removing all installed modules."
     for module in "$MODS_ALL"/*; do
+      [[ ${module##*/} = base ]] && continue
       module_remove "${module##*/}" $lvl2
     done
+    module_remove base $lvl2
     okay $lvl "Done."
     return 0
   fi
@@ -436,7 +474,25 @@ module_list () {
       echo $(fmt bold $output)
       ;;
     * )
-      info $lvl "These modules are installed:"
+      echo "These modules are installed:"
+      for module_on in "$MODS_ON"/*; do
+        output="$output${module_on##*/} "
+      done
+      echo $(fmt bold $output)
+      output=
+      echo "These modules are available but not installed:"
+      for module_available in "$MODS_ALL"/*; do
+        module_test=false
+        for module_on in "$MODS_ON"/*; do
+          if [[ ${module_available##*/} = ${module_on##*/} ]]; then
+            module_test=true
+          fi
+        done
+        if [[ $module_test = false ]]; then
+          output="$output${module_available##*/} "
+        fi
+      done
+      echo $(fmt bold $output)
       ;;
   esac
 }
@@ -457,6 +513,7 @@ scripts_execute () {
   local name=$2
   local lvl=${3:-0} # 0 unless second param set
   local lvl2=$(( lvl + 1 ))
+  local lvl3=$(( lvl + 3 ))
   local count=0
 
   if [[ ! -h $path ]]; then
@@ -471,6 +528,7 @@ scripts_execute () {
         info $lvl2 "Executing $(fmt bold $file)."
         (( count++ ))
         source "$file"
+        okay $lvl2 "Done."
         ;;
       * )
         fail $lvl2 "Found $(fmt bold $file), but scripts must" \
@@ -604,12 +662,39 @@ packages_remove () {
 }
 
 #######################################
+# Resolve all occurrences of .. within a string representing a path.
+# resolve_parents solves by repetition, resolve_parents_r by recursion
+#
+# I asked about better way to do this on SO, but seems nothing simpler unless
+# `readlink -m` is installed. See http://stackoverflow.com/q/43114674/172602
+# Globals:
+#   None
+# Arguments:
+#   path  (string) Path to normalize
+# Returns:
+#   path  (string) Normalized path
+#######################################
+resolve_parents () {
+  local previous result=$1
+  local re='[^\/]{1,}\/\.\.' && re="\/$re|$re\/"
+  while [[ $result != $previous ]]; do
+    previous=$result
+    result=$(echo "$result" | awk 'sub(/\/'"$re"'/,"") || 1')
+  done
+  echo "$result"
+}
+resolve_parents_r () {
+  local re='[^\/]{1,}\/\.\.'
+  re="\/$re|$re\/"
+  local result=$(echo "$1" | awk 'sub(/\/'"$re"'/,"") || 1')
+  [[ $1 = $result ]] && echo "$1" || resolve_parents_r "$result"
+}
+
+#######################################
 # Create symlinks and prompt on conflict to skip, overwrite or backup.
 # Based on @holman/dotfiles but largely changed logic.
 # Globals:
-#   overwrite_all  (bool) Optional flag
-#   backup_all     (bool) Optional flag
-#   skip_all       (bool) Optional flag
+#   conflict_action  (string) Either "overwrite_all", "backup_all" or "skip_all"
 # Arguments:
 #   src  (file) Source file
 #   dst  (file) Directory to put link
@@ -618,72 +703,71 @@ packages_remove () {
 #######################################
 link_file () {
   # set global vars to defaults if not set
-  overwrite_all=${overwrite_all:-false}
-  backup_all=${backup_all:-false}
-  skip_all=${skip_all:-false}
+  conflict_action=${conflict_action:-}
 
   local src=$1 dst=$2
-  [[ $src = ..* ]] && src=$( cd "$dst/$src" && pwd -P ) # resolve relative path
-  [[ -d $dst ]] && dst=$dst/$(basename "$src") # aid detection of existing link
+  # ensure $dst ends with target name to aid detection of existing link
+  local norm_dst=$dst
+  [[ -d $dst ]] && norm_dst=$dst/$(basename "$src")
+  # resolve relative $src for existence test
+  local norm_src=$src
+  [[ $src != /* ]] && norm_src=$(resolve_parents "$norm_dst/../$src")
+
   local lvl=${3:-0} # 0 unless second param set
   local lvl2=$(( lvl + 1 ))
   local nicesrc=$(fmt bold $src)
-  local nicedst=$(fmt bold $dst)
-  local overwrite= backup= skip= # var=false breaks var=${var:-$var_all}
-  local action=
+  local nicedst=$(fmt bold $norm_dst)
+  local user_input=
 
-  info $lvl "Attempting to link to $(fmt bold $(basename "$src"))."
-
-  if ! [[ -f $src || -d $src || -L $src ]]; then
+  info $lvl "Linking $(fmt bold "$(dirname "$norm_dst") -> $src")."
+  if ! [[ -f $norm_src || -d $norm_src || -L $norm_src ]]; then
     fail $lvl "Source file $nicesrc does not exist."
     return 1
   fi
 
-  if [[ -f $dst || -d $dst || -L $dst ]]; then
-    local currentSrc=$(readlink $dst)
-    if [[ $currentSrc = $src ]]; then
-      # okay $lvl "$nicedst already points to $nicesrc"
+  if [[ -f $norm_dst || -d $norm_dst || -L $norm_dst ]]; then
+    if [[ $(readlink $norm_dst) = $src ]]; then
+      okay $lvl "$nicedst already points to $nicesrc"
       return 0
     fi
 
-    if [[ $overwrite_all = false && $backup_all = false && $skip_all = false ]]; then
+    if [[ $conflict_action != *_all ]]; then
       user $lvl2 "File $nicedst already exists. What do you want to do?"
       user $lvl2 "[s]kip, [S]kip all," \
         '[o]verwrite, [O]verwrite all, [b]ackup, [B]ackup all'
-      read -n 1 action
-      case $action in
-        o ) overwrite=true ;;
-        O ) overwrite_all=true ;;
-        b ) backup=true ;;
-        B ) backup_all=true ;;
-        s ) skip=true ;;
-        S ) skip_all=true ;;
+      read -n 1 user_input
+      case $user_input in
+        o ) conflict_action=overwrite ;;
+        O ) conflict_action=overwrite_all ;;
+        b ) conflict_action=backup ;;
+        B ) conflict_action=backup_all ;;
+        s ) conflict_action=skip ;;
+        S ) conflict_action=skip_all ;;
         * ) ;;
       esac
     fi
 
-    # assumes initialized with 'var=' not 'var=false'
-    overwrite=${overwrite:-$overwrite_all}
-    backup=${backup:-$backup_all}
-    skip=${skip:-$skip_all}
-
-    if [[ $skip = true ]]; then
-      okay $lvl2 "Skipped $nicesrc."
-      return 0
-    else
-      if [[ $overwrite = true ]]; then
-        rm -rf "$dst" &&
+    case $conflict_action in
+      overwrite* )
+        rm -rf "$norm_dst" &&
         info $lvl2 "Removed $nicedst."
-      elif [[ $backup = true ]]; then
-        local bck="${dst}.$(date "+%Y%m%d_%H%M%S").backup"
-        mv "$dst" "$bck" &&
+        ;;
+      backup* )
+        local bck="${norm_dst}.$(date "+%Y%m%d_%H%M%S").backup"
+        mv "$norm_dst" "$bck" &&
         info $lvl2 "Moved $nicedst to $(fmt bold $bck)."
-      fi
-    fi
+        ;;
+      skip* )
+        okay $lvl2 "Skipped $nicesrc."
+        return 0
+        ;;
+      * ) ;;
+    esac
+
   fi
 
   ln -s "$1" "$2" &&
-  okay $lvl "Linked $(fmt bold $2) to $(fmt bold $1)."
+  okay $lvl "Done."
 }
 
 #######################################
