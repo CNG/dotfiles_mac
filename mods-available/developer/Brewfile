@@ -11,6 +11,7 @@ brew 'keychain'
 cask 'sublime-text'
 cask 'macdown'
 cask 'hex-fiend'
+cask 'mou'
 
 # file transfer
 #cask 'transmit'

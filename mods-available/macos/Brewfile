@@ -1,2 +1,8 @@
 # services management
 cask 'lingon-x'
+
+tap 'OJFord/formulae'
+brew 'loginitems'
+
+# Retina DisplayMenu
+cask 'avibrazil-rdm'
