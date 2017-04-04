@@ -320,6 +320,23 @@ packages_upgrade () {
     if ! brew bundle check --file="$manifest" > /dev/null; then
       _packages_upgrade_recurse
     fi
+    
+    # Run brew-cask-upgrade on casks in this module
+    cat "$manifest" | tr -s " " | # squash spaces and pass to loop
+    while read -r line; do
+      line=${line%,*} # keep up to first comma
+      line=${line//\'/} # hope package names don't contain single quotes
+      line=${line//\"/} # hope package names don't contain double quotes
+      case $line in
+        'cask '* )
+          if ! log="$(brew cu -y "${line#cask }")"; then
+            echo "$log"
+            return 1
+          fi
+          ;;
+      esac
+    done
+
   fi
   okay $lvl "Done."
 }
@@ -331,6 +348,9 @@ _packages_upgrade_recurse () {
   # exit if upgrade successful, inverted due to set -e
   # can output by ` | tee /dev/tty` http://stackoverflow.com/a/12451419/172602
   ! log=$(brew bundle --file="$manifest" | tee /dev/tty) || return 0
+
+  # TODO: check for Casks requiring manual install
+  # Example https://github.com/caskroom/homebrew-cask/issues/24227
 
   local lvl3=$(( lvl + 2 ))
   local fixes=0
