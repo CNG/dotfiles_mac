@@ -1,2 +1,3 @@
-mkdir -p "$@" && cd "$@"
+#!/bin/sh
 
+mkdir -p "$@" && cd "$@"
