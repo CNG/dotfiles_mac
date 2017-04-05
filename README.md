@@ -20,7 +20,7 @@ If you install it somewhere else, define `DOTFILES=/path/to/dotfiles` in `mods-a
     git clone https://github.com/CNG/dotfiles.git ~/.dotfiles
     ~/.dotfiles/dotfiles install
 
-If you later move the directory, you should run `./dotfiles reinstall --all` to update any symbolic links set up by installed modules.
+If you later move the directory, you should run `dotfiles reinstall` to update any symbolic links set up by installed modules.
 
 ## Configuration
 
@@ -63,58 +63,46 @@ Modules are not actually installed until the `dotfiles install module_name` comm
 ## Usage
 
 * **`dotfiles install`**
-    Install the required module, **base**.
-
+    Install the required module, **base**.  
     **`dotfiles install A`**
-    Install a module.
-
+    Install a module.  
     **`dotfiles install A B C ...`**
-    Install multiple modules.
-
+    Install multiple modules.  
     **`dotfiles install --all`**
     Install all available modules.
 
 * **`dotfiles reinstall `**
-    Reinstall all installed modules.
-
+    Reinstall all installed modules.  
     **`dotfiles reinstall A`**
-    Reinstall a module.
-
+    Reinstall a module.  
     **`dotfiles reinstall A B C ...`**
     Reinstall multiple modules.
 
 * **`dotfiles upgrade`**
-    Upgrade all installed modules.
-
+    Upgrade all installed modules.  
     **`dotfiles upgrade A`**
-    Upgrade a module.
-
+    Upgrade a module.  
     **`dotfiles upgrade A B C ...`**
     Upgrade multiple modules.
 
 * **`dotfiles remove A`**
-    Remove a module.
-
+    Remove a module.  
     **`dotfiles remove A B C ...`**
-    Remove multiple modules.
-
+    Remove multiple modules.  
     **`dotfiles remove --all`**
     Remove all available modules.
 
-* **`dotfiles cleanup`**
-
+* **`dotfiles cleanup`**  
     Uninstall any installed `brew` packages that are not required by currently installed modules.
     This does not run any module scripts or modify symbolic links but only analyzes the required package manifests in each installed module and removes any extras that were installed manually or by a module that has since changed.
 
+
 * **`dotfiles list`**
-    List modules installed and available but not installed.
-
+    List modules installed and available but not installed.  
     **`dotfiles list --installed`**
-    List modules installed.
-
+    List modules installed.  
     **`dotfiles list --available`**
-    List all modules.
-
+    List all modules.  
     **`dotfiles list --not-installed`**
     List modules available but not installed.
 
@@ -126,6 +114,6 @@ Modules are not actually installed until the `dotfiles install module_name` comm
 
 ## Notes
 
-I am struggling with or have not much thought about a sensible splitting between the modules `zsh`, `base`, `macos` and `developer`.
+I do not yet have a totally sensible split between the modules `zsh`, `base`, `macos` and `developer`.
 
-Nowhere for functions not written in sh/bash/zsh? Or can ruby etc. work in fpath?
+[@holman/dotfiles](https://github.com/holman/dotfiles) had a `bin` folder that got linked in `$PATH` and thus allowed for scripts written in any language. I moved most of that to the `functions` folders for Zsh autoloading, but now I think that only supports scripts written in shell. Modules can update the `$PATH` to include anything, so I won't worry about it for now.
