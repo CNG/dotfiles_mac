@@ -36,6 +36,7 @@ brew 'libtool' #Generic library support script
 # utilities
 brew 'ack'
 brew 'rdfind'
+brew 'ngrep'
 brew 'lynx'
 brew 'rename'
 brew 'trash'
