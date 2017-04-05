@@ -1,2 +1,3 @@
 mods-enabled/*
-*.local.symlink
+_resources
+*.local.*

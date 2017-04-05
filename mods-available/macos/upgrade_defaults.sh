@@ -1,3 +1,21 @@
+# I don't want to upgrade OSX itself on my desktop, need to investigate
+# Also using mas-cli with brew...
+# echo "› sudo softwareupdate -i -a"
+# sudo softwareupdate -i -a
+
+# TODO: add undo
+# allow sudo without password
+#sudo sed -i 's|^[[:space:]#]+(%wheel[[:space:]]+ALL[[:space:]]*=[[:space:]]*\([[:space:]]*ALL[[:space:]]*\)[[:space:]]*NOPASSWD:[[:space:]]*ALL.*)|\1|' /etc/sudoers
+#sudo dscl . append /Groups/wheel GroupMembership $(whoami)
+
+loginitems -a "Retina DisplayMenu" -p "/Applications/RDM/RDM.app"
+loginitems -a "Divvy"
+
+# Mountain Lion deletes the file /etc/crontab which is needed for crontab to run.
+# If you plan to use scheduled job with cron, you need to type the following command to enable it:
+[[ -f /etc/crontab ]] || sudo touch /etc/crontab
+
+
 # Retrieve latest @
 # mathiasbynens=$(curl -fsL https://github.com/mathiasbynens/dotfiles/raw/master/.macos)
 # echo $mathiasbynens | sed '/#.*/d' | sed '/[[:space:]]+/d' |
@@ -62,41 +80,4 @@ defaults write com.apple.desktopservices DSDontWriteUSBStores -bool true
 # Disable gatekeeper, but don't have a specific need for this that i know of
 # sudo spctl --master-disable
 
-# go through https://github.com/mathiasbynens/dotfiles/blob/master/.macos again
 
-
-# Disable press-and-hold for keys in favor of key repeat.
-defaults write -g ApplePressAndHoldEnabled -bool false
-
-# Use AirDrop over every interface.
-defaults write com.apple.NetworkBrowser BrowseAllInterfaces 1
-
-# Always open everything in Finder's list view. This is important.
-defaults write com.apple.Finder FXPreferredViewStyle Nlsv
-
-# Show the ~/Library folder.
-chflags nohidden ~/Library
-
-# Set a really fast key repeat.
-defaults write NSGlobalDomain KeyRepeat -int 1
-
-# Set the Finder prefs for showing a few different volumes on the Desktop.
-defaults write com.apple.finder ShowExternalHardDrivesOnDesktop -bool true
-defaults write com.apple.finder ShowRemovableMediaOnDesktop -bool true
-
-# Run the screensaver if we're in the bottom-left hot corner.
-# defaults write com.apple.dock wvous-bl-corner -int 5
-# defaults write com.apple.dock wvous-bl-modifier -int 0
-
-# Hide Safari's bookmark bar.
-defaults write com.apple.Safari ShowFavoritesBar -bool false
-
-# Set up Safari for development.
-defaults write com.apple.Safari IncludeInternalDebugMenu -bool true
-defaults write com.apple.Safari IncludeDevelopMenu -bool true
-defaults write com.apple.Safari WebKitDeveloperExtrasEnabledPreferenceKey -bool true
-defaults write com.apple.Safari "com.apple.Safari.ContentPageGroupIdentifier.WebKit2DeveloperExtrasEnabled" -bool true
-defaults write NSGlobalDomain WebKitDeveloperExtras -bool true
-
-killall Finder
-killall Dock

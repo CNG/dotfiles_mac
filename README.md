@@ -124,3 +124,6 @@ Modules are not actually installed until the `dotfiles install module_name` comm
 * **`dotfiles help`**
     Display the help page.
 
+## Notes
+
+I am struggling with or have not much thought about a sensible splitting between the modules `zsh`, `base`, `macos` and `developer`.
