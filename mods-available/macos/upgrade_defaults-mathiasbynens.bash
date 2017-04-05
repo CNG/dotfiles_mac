@@ -1,3 +1,5 @@
+# https://github.com/mathiasbynens/dotfiles/blob/master/.macos
+
 #!/usr/bin/env bash
 
 # ~/.macos — https://mths.be/macos

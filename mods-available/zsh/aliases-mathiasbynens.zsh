@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+# https://github.com/mathiasbynens/dotfiles/blob/master/.aliases
 
 # Easier navigation: .., ..., ...., ....., ~ and -
 alias ..="cd .."
