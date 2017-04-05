@@ -11,7 +11,11 @@ brew 'keychain'
 cask 'sublime-text'
 cask 'macdown'
 cask 'hex-fiend'
-cask 'mou'
+# cask 'mou'
+# Error: Cask mou depends on macOS release <= 10.11, but you are running release 10.12.
+# Error: nothing to install
+# ==> Satisfying dependencies
+# Installing mou has failed!
 brew 'vim', args: ['with-override-system-vi']
 
 # file transfer
@@ -30,6 +34,7 @@ brew 'libtool' #Generic library support script
 #brew 'xz' #General-purpose data compression with high compression ratio
 
 # utilities
+brew 'ack'
 brew 'rdfind'
 brew 'lynx'
 brew 'rename'
@@ -40,11 +45,11 @@ brew 'p7zip'
 brew 'wget'
 brew 'readline'
 brew 'gnu-sed', args: ['with-default-names']
-brew 'homebrew/dupes/grep', args: ['with-default-names']
-brew 'homebrew/dupes/make'
-brew 'homebrew/dupes/rsync'
-brew 'homebrew/dupes/openssh'
-brew 'homebrew/dupes/screen'
+brew 'grep', args: ['with-default-names']
+brew 'make'
+brew 'rsync'
+#brew 'openssh' # need to resolve agent strategy Bad configuration option: usekeychain
+brew 'screen'
 
 # Install GNU core utilities (those that come with macOS are outdated).
 # Don’t forget to add `$(brew --prefix coreutils)/libexec/gnubin` to `$PATH`.

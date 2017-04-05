@@ -206,12 +206,12 @@ module_install () {
   }
   trap trap_term_signal INT TERM
   trap trap_fail EXIT
-  local path=$MODS_ON/$module
+  local pth=$MODS_ON/$module
   link_file "../${MODS_ALL##*/}/$module" "$MODS_ON" $lvl2
-  packages_upgrade "$path/Brewfile" $lvl2
-  scripts_execute "$path" 'install' $lvl2
-  dotfiles_install "$path" $lvl2
-  scripts_execute "$path" 'upgrade' $lvl2
+  packages_upgrade "$pth/Brewfile" $lvl2
+  scripts_execute "$pth" 'install' $lvl2
+  dotfiles_install "$pth" $lvl2
+  scripts_execute "$pth" 'upgrade' $lvl2
   trap - INT TERM EXIT
   okay $lvl "Done."
 }
@@ -232,6 +232,7 @@ module_reinstall () {
   local module=$1
   local lvl=${2:-0} # 0 unless second param set
   local lvl2=$(( lvl + 1 ))
+  local nice_name=$(fmt bold $module)
 
   # If --all flag, recurse
   if [[ $module == --all ]]; then
@@ -244,12 +245,14 @@ module_reinstall () {
   fi
 
   # same steps as module_install but without uninstalling on trap
-  local path=$MODS_ON/$module
+  info $lvl "Reinstalling module $nice_name."
+  local pth=$MODS_ON/$module
   link_file "../${MODS_ALL##*/}/$module" "$MODS_ON" $lvl2
-  packages_upgrade "$path/Brewfile" $lvl2
-  scripts_execute "$path" 'install' $lvl2
-  dotfiles_install "$path" $lvl2
-  scripts_execute "$path" 'upgrade' $lvl2
+  packages_upgrade "$pth/Brewfile" $lvl2
+  scripts_execute "$pth" 'install' $lvl2
+  dotfiles_install "$pth" $lvl2
+  scripts_execute "$pth" 'upgrade' $lvl2
+  okay $lvl "Done."
 }
 
 
@@ -320,7 +323,7 @@ packages_upgrade () {
     if ! brew bundle check --file="$manifest" > /dev/null; then
       _packages_upgrade_recurse
     fi
-    
+
     # Run brew-cask-upgrade on casks in this module
     cat "$manifest" | tr -s " " | # squash spaces and pass to loop
     while read -r line; do
@@ -435,12 +438,12 @@ module_remove () {
     return 0
   fi
 
-  local path=$MODS_ON/$module
+  local pth=$MODS_ON/$module
   info $lvl "Removing module $nice_name."
-  dotfiles_remove "$path" $lvl2
-  scripts_execute "$path" 'remove' $lvl2
-  packages_remove "$path/Brewfile" $lvl2
-  rm -f "$path"
+  dotfiles_remove "$pth" $lvl2
+  scripts_execute "$pth" 'remove' $lvl2
+  packages_remove "$pth/Brewfile" $lvl2
+  rm -f "$pth"
   if [[ ! -d "$MODS_ALL/$module" ]]; then
     info $lvl2 "Module $nice_name is now removed," \
       "but it cannot be reinstalled because it is unavailable."
@@ -523,26 +526,26 @@ module_list () {
 # Globals:
 #   None
 # Arguments:
-#   path  (string) Directory to search
-#   name  (string) Find scripts starting with this and ending in .bash or .sh
+#   pth  (string) Directory to search
+#   name (string) Find scripts starting with this and ending in .bash or .sh
 # Returns:
 #   None
 #######################################
 scripts_execute () {
-  local path=$1
+  local pth=$1
   local name=$2
   local lvl=${3:-0} # 0 unless second param set
   local lvl2=$(( lvl + 1 ))
   local lvl3=$(( lvl + 3 ))
   local count=0
 
-  if [[ ! -h $path ]]; then
-    fail $lvl "Invalid path $(fmt bold $path)."
+  if [[ ! -h $pth ]]; then
+    fail $lvl "Invalid path $(fmt bold $pth)."
     return 1
   fi
 
   info $lvl "Checking for $name scripts."
-  for file in "$path/$name"*; do
+  for file in "$pth/$name"*; do
     case $file in
       *.sh | *.bash )
         info $lvl2 "Executing $(fmt bold $file)."
@@ -566,24 +569,24 @@ scripts_execute () {
 # Globals:
 #   HOME  (string) Path to symlinks indicating installed modules.
 # Arguments:
-#   path  (string) Directory to search
-#   lvl   (int) Indentation level. Default 0.
+#   pth  (string) Directory to search
+#   lvl  (int) Indentation level. Default 0.
 # Returns:
 #   None
 #######################################
 dotfiles_install () {
-  local path=$1
+  local pth=$1
   local lvl=${2:-0} # 0 unless second param set
   local lvl2=$(( lvl + 1 ))
   local count=0
 
-  if [[ ! -h $path ]]; then
-    fail $lvl "Invalid path $(fmt bold $path)."
+  if [[ ! -h $pth ]]; then
+    fail $lvl "Invalid path $(fmt bold $pth)."
     return 1
   fi
 
   info $lvl "Checking for configuration files to link."
-  for src in "$path"/*.symlink; do
+  for src in "$pth"/*.symlink; do
     dst="$HOME/.$(basename "${src%.*}")"
     link_file "$src" "$dst" $lvl2
     (( count++ ))
@@ -598,24 +601,24 @@ dotfiles_install () {
 # Globals:
 #   HOME  (string) Path to symlinks indicating installed modules.
 # Arguments:
-#   path  (string) Directory to search
-#   lvl   (int) Indentation level. Default 0.
+#   pth  (string) Directory to search
+#   lvl  (int) Indentation level. Default 0.
 # Returns:
 #   None
 #######################################
 dotfiles_remove () {
-  local path=$1
+  local pth=$1
   local lvl=${2:-0} # 0 unless second param set
   local lvl2=$(( lvl + 1 ))
   local count=0
 
-  if [[ ! -h $path ]]; then
-    fail $lvl "Invalid path $(fmt bold $path)."
+  if [[ ! -h $pth ]]; then
+    fail $lvl "Invalid path $(fmt bold $pth)."
     return 1
   fi
 
   info $lvl "Checking for configuration files that need links removed."
-  for src in "$path"/*.symlink; do
+  for src in "$pth"/*.symlink; do
     dst="$HOME/.$(basename "${src%.*}")"
     user $lvl "You may want to delete or modify: $dst"
     #TODO implement checking if backed up file exists and interactive mode

@@ -1,3 +1,6 @@
 mods-enabled/*
 _resources
-*.local.*
+*.local.symlink
+*.local.sh
+*.local.bash
+

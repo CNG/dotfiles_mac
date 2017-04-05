@@ -127,3 +127,5 @@ Modules are not actually installed until the `dotfiles install module_name` comm
 ## Notes
 
 I am struggling with or have not much thought about a sensible splitting between the modules `zsh`, `base`, `macos` and `developer`.
+
+Nowhere for functions not written in sh/bash/zsh? Or can ruby etc. work in fpath?
