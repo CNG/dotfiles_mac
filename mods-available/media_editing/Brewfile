@@ -19,6 +19,7 @@ mas 'iMovie', id: 408981434
 cask 'handbrake'
 #mas 'Smart Converter Pro', id: 450078312
 #mas 'Music Speed Changer', id: 813546051
+brew 'imagemagick'
 
 # recorders
 mas 'Camera Record Pro', id: 1056029469
@@ -26,4 +27,3 @@ mas 'Quick Recorder', id: 1020149961
 
 # mp3 editor, I think
 mas 'Tag Editor Free', id: 984278082
-

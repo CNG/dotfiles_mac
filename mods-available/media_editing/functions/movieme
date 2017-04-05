@@ -28,3 +28,6 @@ ffmpeg -i "$1" -f image2 -vf "scale=iw*sar:ih" -ss $2 -t $3 -r 7 /tmp/movieme/d-
 
 # ANIMATE
 gifme /tmp/movieme/* -d 0
+
+# cleanup
+rm -rf /tmp/movieme
