@@ -4,3 +4,6 @@ mas 'Black and White 2', id: 437519881
 # mas '2048 Game', id: 871033113
 # mas '2048 6x6', id: 892912527
 # mas '2048 5x5', id: 879946570
+
+# cask 'minecraft-server'
+# cask 'minecraft'

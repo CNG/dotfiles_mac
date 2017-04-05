@@ -12,6 +12,7 @@ cask 'sublime-text'
 cask 'macdown'
 cask 'hex-fiend'
 cask 'mou'
+brew 'vim', args: ['with-override-system-vi']
 
 # file transfer
 #cask 'transmit'
@@ -20,6 +21,7 @@ mas 'Transmit', id: 403388562
 # programming
 brew 'python3'
 brew 'gnu-getopt'
+brew 'lua'
 
 # libraries
 brew 'pcre' #Perl compatible regular expressions library
@@ -28,16 +30,30 @@ brew 'libtool' #Generic library support script
 #brew 'xz' #General-purpose data compression with high compression ratio
 
 # utilities
-brew 'coreutils'
 brew 'rdfind'
+brew 'lynx'
 brew 'rename'
 brew 'trash'
 brew 'watch'
+brew 'tree'
+brew 'p7zip'
 brew 'wget'
 brew 'readline'
+brew 'gnu-sed', args: ['with-default-names']
 brew 'homebrew/dupes/grep', args: ['with-default-names']
 brew 'homebrew/dupes/make'
 brew 'homebrew/dupes/rsync'
+brew 'homebrew/dupes/openssh'
+brew 'homebrew/dupes/screen'
+
+# Install GNU core utilities (those that come with macOS are outdated).
+# Don’t forget to add `$(brew --prefix coreutils)/libexec/gnubin` to `$PATH`.
+brew 'coreutils'
+
+# Install some other useful utilities like `sponge`.
+brew 'moreutils'
+# Install GNU `find`, `locate`, `updatedb`, and `xargs`, `g`-prefixed.
+brew 'findutils'
 
 # compiling
 brew 'autoconf' #Automatic configure script builder

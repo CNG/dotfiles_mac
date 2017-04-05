@@ -437,7 +437,7 @@ module_remove () {
 
   local path=$MODS_ON/$module
   info $lvl "Removing module $nice_name."
-  dotfiles_install "$path" $lvl2
+  dotfiles_remove "$path" $lvl2
   scripts_execute "$path" 'remove' $lvl2
   packages_remove "$path/Brewfile" $lvl2
   rm -f "$path"
