@@ -40,7 +40,7 @@
 			"*.class",
 			"*.psd",
 			"*.db",
-			"*.sublime-workspace"
+			"*.sublime-workspace",
 			"Desktop.ini",
 			"._*",
 			"Thumbs.db",
