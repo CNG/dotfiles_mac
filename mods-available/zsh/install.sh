@@ -11,3 +11,5 @@ git clone https://github.com/powerline/fonts.git /tmp/powerlinefonts
 rm -rf /tmp/powerlinefonts
 # TODO: add undo
 
+# Disable path_helper since we manage $PATH separately
+[[ ! -x /usr/libexec/path_helper ]] || sudo chmod -x /usr/libexec/path_helper
