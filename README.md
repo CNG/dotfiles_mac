@@ -20,7 +20,7 @@ If you install it somewhere else, define `DOTFILES=/path/to/dotfiles` in `mods-a
     git clone https://github.com/CNG/dotfiles.git ~/.dotfiles
     ~/.dotfiles/dotfiles install
 
-If you later move the directory, you should run `dotfiles reinstall` to update any symbolic links set up by installed modules.
+If you later move the directory, you should run `dotfiles install --force` to update any symbolic links set up by installed modules.
 
 ## Configuration
 
@@ -34,7 +34,7 @@ Modules are not actually installed until the `dotfiles install module_name` comm
     Files starting with `manifest` list dependencies for [Homebrew Bundle](https://github.com/Homebrew/homebrew-bundle) to install and keep updated if possible.
 * **`install*.[ba]sh`**
     Files starting with `install` and ending with `.bash` or `.sh` are run by the `dotfiles install` command.
-    These should contain actions to be performed only once, upon initial module installation, but they may be run again by subsequent `dotfiles install` commands or `dotfiles reinstall` commands.
+    These should contain actions to be performed only once, upon initial module installation, but they may be run again by subsequent `dotfiles install --force` commands.
 * **`upgrade*.[ba]sh`**
     Files starting with `upgrade` and ending with `.bash` or `.sh` are run by the `dotfiles install` command and the `dotfiles upgrade` command.
     These should contain actions to be performed periodically to keep any components outside the package manifest up to date.
@@ -55,7 +55,7 @@ Modules are not actually installed until the `dotfiles install module_name` comm
     Files ending in `.symlink` get referenced from symbolic links created in your `$HOME` directory such that `~/.filename` is a symbolic link pointing to `filename.symlink`.
     This allows your system configuration files to automatically reflect updates to this dotfiles project.
     Links are created by the `dotfiles install` command.
-    If new `.symlink` files are created after a module is already installed, run the `dotfiles install` command again.
+    If new `.symlink` files are created after a module is already installed, run the `dotfiles install --force` command.
 * **`functions/*`**
     Any [appropriately formatted](http://zsh.sourceforge.net/Doc/Release/Functions.html) files in a folder called `functions` are loaded into `$fpath` and become functions accessible anywhere, similar to aliases.
     The folder also can contain `#compdef` [completion files](http://zsh.sourceforge.net/Doc/Release/Completion-System.html#Autoloaded-files) that usually start with `_`.
@@ -71,13 +71,6 @@ Modules are not actually installed until the `dotfiles install module_name` comm
     **`dotfiles install --all`**
     Install all available modules.  
     Modules following `--force` will be reinstalled.
-
-* **`dotfiles reinstall `**
-    Reinstall all installed modules.  
-    **`dotfiles reinstall A`**
-    Reinstall a module.  
-    **`dotfiles reinstall A B C ...`**
-    Reinstall multiple modules.
 
 * **`dotfiles upgrade`**
     Upgrade all installed modules.  
