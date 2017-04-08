@@ -25,7 +25,7 @@ install_command () {
 #######################################
 install_brew () {
   if test ! $(which brew); then
-   local lvl=${1:-0} # 0 unless second param set
+    local lvl=${1:-0} # 0 unless second param set
     if [[ $OSTYPE == darwin* ]]; then
       info $lvl "Installing Homebrew."
       ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"

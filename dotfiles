@@ -14,53 +14,45 @@ APP_ROOT="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 source "$APP_ROOT/lib/common.bash"
 
 hdlr_install () {
-  # defaults to base
-  if (( $# > 0 )); then
-    for module in "$@"; do
-      module_install "$module"
-    done
-    return 0
-  fi
-  module_install base
-}
-
-hdlr_reinstall () {
-  # defaults to --all
-  if (( $# > 0 )); then
-    for module in "$@"; do
-      module_reinstall "$module"
-    done
-    return 0
-  fi
-  module_reinstall --all
+  local force='false'
+  (( $# != 0 )) || module_install $force base
+  for module in "$@"; do
+    if [[ $module = --force ]]; then
+      force='true'
+      continue
+    fi
+    module_install $force "$module"
+  done
 }
 
 hdlr_upgrade () {
-  # defaults to --all
-  if (( $# > 0 )); then
-    for module in "$@"; do
-      module_upgrade "$module"
-    done
-    return 0
-  fi
-  module_upgrade --all
+  (( $# != 0 )) || module_upgrade --all
+  for module in "$@"; do
+    module_upgrade "$module"
+  done
 }
 
 hdlr_remove () {
-  # does not default to --all
-  (( $# == 0 )) && print_usage
+  (( $# != 0 )) || print_usage
+  local force='false'
   for module in "$@"; do
-    module_remove "$module"
+    shift # for detecting if --force is last
+    if [[ $module = --force ]]; then
+      (( $# != 0 )) || print_usage
+      force='true'
+    else
+      module_remove $force "$module"
+    fi
   done
+}
+
+hdlr_list () {
+  module_list "$@"
 }
 
 hdlr_cleanup () {
   (( $# == 0 )) || print_usage
   packages_cleanup
-}
-
-hdlr_list () {
-  module_list "$@"
 }
 
 hdlr_tests () {

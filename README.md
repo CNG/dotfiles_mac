@@ -30,8 +30,8 @@ Modules are not actually installed until the `dotfiles install module_name` comm
 
 ### Module structure
 
-* **`Brewfile`**
-    Each module can contain one file called `Brewfile` that lists dependencies for [Homebrew Bundle](https://github.com/Homebrew/homebrew-bundle) to install and keep updated.
+* **`manifest*`**
+    Files starting with `manifest` list dependencies for [Homebrew Bundle](https://github.com/Homebrew/homebrew-bundle) to install and keep updated if possible.
 * **`install*.[ba]sh`**
     Files starting with `install` and ending with `.bash` or `.sh` are run by the `dotfiles install` command.
     These should contain actions to be performed only once, upon initial module installation, but they may be run again by subsequent `dotfiles install` commands or `dotfiles reinstall` commands.
@@ -69,7 +69,8 @@ Modules are not actually installed until the `dotfiles install module_name` comm
     **`dotfiles install A B C ...`**
     Install multiple modules.  
     **`dotfiles install --all`**
-    Install all available modules.
+    Install all available modules.  
+    Modules following `--force` will be reinstalled.
 
 * **`dotfiles reinstall `**
     Reinstall all installed modules.  
@@ -90,7 +91,8 @@ Modules are not actually installed until the `dotfiles install module_name` comm
     **`dotfiles remove A B C ...`**
     Remove multiple modules.  
     **`dotfiles remove --all`**
-    Remove all available modules.
+    Remove all available modules.  
+    Modules following `--force` will be removed again.
 
 * **`dotfiles cleanup`**  
     Uninstall any installed `brew` packages that are not required by currently installed modules.
