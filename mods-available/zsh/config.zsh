@@ -20,7 +20,8 @@ setopt EXTENDED_HISTORY # add timestamps to history
 setopt PROMPT_SUBST
 setopt CORRECT
 setopt COMPLETE_IN_WORD
-setopt IGNORE_EOF
+#setopt IGNORE_EOF # CTRL+D won't exit shell
+#setopt IGNORE_EOF=2 # CTRL+D twice to exit shell
 
 setopt APPEND_HISTORY # adds history
 setopt INC_APPEND_HISTORY SHARE_HISTORY  # adds history incrementally and share it across sessions
