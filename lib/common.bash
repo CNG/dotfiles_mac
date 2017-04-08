@@ -223,9 +223,9 @@ _module_install_inner () {
   local pth=$MODS_ON/$module
   link_file "../${MODS_ALL##*/}/$module" "$MODS_ON" $lvl2
   packages_upgrade "$module" $lvl2
-  scripts_execute "$pth" 'install' $force $lvl2
+  scripts_execute "$pth" 'install' $lvl2
   dotfiles_install "$pth" $lvl2
-  scripts_execute "$pth" 'upgrade' $force $lvl2
+  scripts_execute "$pth" 'upgrade' $lvl2
 }
 
 #######################################
@@ -263,7 +263,7 @@ module_upgrade () {
   fi
 
   info $lvl "Upgrading module $nice_name."
-  scripts_execute "$path" 'upgrade' 'false' $lvl2
+  scripts_execute "$path" 'upgrade' $lvl2
   packages_upgrade "$module" $lvl2
   dotfiles_install "$path" $lvl2
   okay $lvl "Done."
@@ -329,7 +329,7 @@ module_remove () {
 }
 _module_remove_inner () {
   dotfiles_remove "$MODS_ON/$module" $lvl2
-  scripts_execute "$MODS_ALL/$module" 'remove' $force $lvl2
+  scripts_execute "$MODS_ALL/$module" 'remove' $lvl2
   packages_remove "$module" $lvl2
   rm -f "$MODS_ON/$module"
 }
@@ -664,7 +664,6 @@ packages_remove () {
 # Arguments:
 #   pth            (string) Directory to search
 #   name           (string) Find scripts starting with this and ending in .bash or .sh
-#   allow_any_dir  (true|false) Allow path to not be a symbolic link.
 #   lvl            (int) Indentation level. Default 0.
 # Returns:
 #   None
@@ -672,14 +671,13 @@ packages_remove () {
 scripts_execute () {
   local pth=$1
   local name=$2
-  local allow_any_dir=${3:-false}
-  local lvl=${4:-0} # 0 unless second param set
+  local lvl=${3:-0} # 0 unless second param set
   local lvl2=$(( lvl + 1 ))
   local lvl3=$(( lvl + 3 ))
   local count=0
 
-  if ! [[ -h $pth || $allow_any_dir = true && -d $pth ]]; then
-    fail $lvl "Invalid path $(fmt bold $pth)."
+  if ! [[ -h $pth || -d $pth ]]; then
+    fail $lvl "Invalid $allow_any_dir path $(fmt bold $pth)."
     return 1
   fi
 
@@ -752,7 +750,8 @@ dotfiles_remove () {
   local lvl2=$(( lvl + 1 ))
   local count=0
 
-  if [[ ! -h $pth && $force = false ]]; then
+  if [[ ! -h $pth ]]; then
+    [[ $force = false ]] || return 0
     fail $lvl "Invalid path $(fmt bold $pth)."
     return 1
   fi
