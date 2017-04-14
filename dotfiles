@@ -61,7 +61,12 @@ hdlr_tests () {
   main_tests
 }
 
+err_report () {
+  echo "Error on line $1"
+}
+
 main () {
+  trap 'err_report $LINENO' ERR
   cd "$( dirname "${BASH_SOURCE[0]}" )"
   case ${1:-} in
     install   ) hdlr_install   "${@:2}" ;;
@@ -73,6 +78,7 @@ main () {
     tests     ) hdlr_tests     "${@:2}" ;;
     * | help  ) print_usage             ;;
   esac
+  trap - ERR
 }
 
 main $@

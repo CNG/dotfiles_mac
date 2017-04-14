@@ -1,5 +1,2 @@
 cask 'adobe-creative-cloud'
-cask 'adobe-photoshop-cc'
-cask 'adobe-photoshop-lightroom'
 # mas 'gps4cam', id: 704400176
-

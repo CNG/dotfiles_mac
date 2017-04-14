@@ -11,6 +11,8 @@ cask 'scroll-reverser'
 mas 'Clipboard History', id: 420939835
 # cask 'divvy'
 mas 'Divvy', id: 413857545
+# Retina DisplayMenu
+cask 'avibrazil-rdm'
 
 # logging
 cask 'rescuetime'

@@ -10,7 +10,9 @@
 install_command () {
   local lvl=${1:-0} # 0 unless second param set
   info $lvl "Installing dotfiles command."
-  link_file "$APP_ROOT/dotfiles" "/usr/local/bin" $lvl
+  sudo chown -R :admin /usr/local
+  sudo find /usr/local -perm -200 -exec chmod g+w '{}' \+
+  link_file "$APP_ROOT/dotfiles" /usr/local/bin $lvl
   okay $lvl "Done."
 }
 
@@ -28,7 +30,7 @@ install_brew () {
     local lvl=${1:-0} # 0 unless second param set
     if [[ $OSTYPE == darwin* ]]; then
       info $lvl "Installing Homebrew."
-      ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+      echo | ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
     elif [[ $OSTYPE == linux* ]]; then
       info $lvl "Installing Linuxbrew dependencies."
       if [[ -n "$(command -v yum)" ]]; then
@@ -37,7 +39,7 @@ install_brew () {
         sudo apt-get install build-essential curl file git python-setuptools ruby
       fi
       info $lvl "Installing Linuxbrew."
-      ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Linuxbrew/install/master/install)"
+      echo | ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Linuxbrew/install/master/install)"
     fi
     okay $lvl "Done."
   fi

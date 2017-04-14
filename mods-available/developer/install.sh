@@ -14,6 +14,10 @@ install_developer() {
 
   # Install the Solarized Dark theme for iTerm
   open "$modpath/Solarized Dark.itermcolors"
+
+  # dtrace: failed to initialize dtrace: DTrace requires additional privileges
+  sudo chmod u+s /usr/sbin/dtrace
+
 }
 
 install_developer $lvl3

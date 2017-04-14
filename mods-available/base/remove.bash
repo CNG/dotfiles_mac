@@ -33,7 +33,7 @@ remove_brew () {
     local lvl=${1:-0} # 0 unless second param set
     if [[ $OSTYPE == darwin* ]]; then
       info $lvl "Removing Homebrew."
-      ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/uninstall)"
+      echo 'y' | ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/uninstall)"
     elif [[ $OSTYPE == linux* ]]; then
       info $lvl "Linuxbrew dependencies require attention, as they may have existed before. NOT running:"
       if [[ -n "$(command -v yum)" ]]; then
@@ -42,7 +42,7 @@ remove_brew () {
         echo 'sudo apt-get remove build-essential curl file git python-setuptools ruby'
       fi
       info $lvl "Removing Linuxbrew."
-      ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Linuxbrew/install/master/uninstall)"
+      echo 'y' | ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Linuxbrew/install/master/uninstall)"
     fi
     okay $lvl "Done."
   fi

@@ -3,7 +3,7 @@
 	"color_scheme": "Packages/Color Scheme - Default/Solarized (Dark).tmTheme",
 	"default_encoding": "UTF-8",
 	"default_line_ending": "unix",
-	"font_size": 17,
+	"font_size": 18,
 	"ignored_packages":
 	[
 		"Vintage"
@@ -14,7 +14,7 @@
 		120
 	],
 	"tab_size": 2,
-	"translate_tabs_to_spaces": false,
+	"translate_tabs_to_spaces": true,
 	// "translate_tabs_to_spaces": true
   // "detect_indentation": false,
 	"draw_white_space": "all", //none, selection, all

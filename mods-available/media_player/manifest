@@ -4,4 +4,3 @@ cask 'vlc'
 cask 'spotify'
 
 cask 'flash-npapi'
-cask 'java'

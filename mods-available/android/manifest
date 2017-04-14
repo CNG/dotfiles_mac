@@ -2,9 +2,11 @@ tap 'homebrew/dupes'
 brew 'make'
 brew 'python3'
 cask 'android-sdk'
-cask 'android-studio'
+#cask 'android-studio'
 cask 'android-file-transfer'
 
 # cask 'android-ndk'
 # Error: No available Cask for android-ndk
 # Error: nothing to install
+
+brew 'socat'

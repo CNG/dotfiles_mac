@@ -222,8 +222,13 @@ module_install () {
 _module_install_inner () {
   local pth=$MODS_ON/$module
   link_file "../${MODS_ALL##*/}/$module" "$MODS_ON" $lvl2
-  packages_upgrade "$module" $lvl2
-  scripts_execute "$pth" 'install' $lvl2
+  if [[ $module = base ]]; then
+    scripts_execute "$pth" 'install' $lvl2
+    packages_upgrade "$module" $lvl2
+  else
+    packages_upgrade "$module" $lvl2
+    scripts_execute "$pth" 'install' $lvl2
+  fi
   dotfiles_install "$pth" $lvl2
   scripts_execute "$pth" 'upgrade' $lvl2
 }
@@ -329,8 +334,13 @@ module_remove () {
 }
 _module_remove_inner () {
   dotfiles_remove "$MODS_ON/$module" $lvl2
-  scripts_execute "$MODS_ALL/$module" 'remove' $lvl2
-  packages_remove "$module" $lvl2
+  if [[ $module = base ]]; then
+    packages_remove "$module" $lvl2
+    scripts_execute "$MODS_ALL/$module" 'remove' $lvl2
+  else
+    scripts_execute "$MODS_ALL/$module" 'remove' $lvl2
+    packages_remove "$module" $lvl2
+  fi
   rm -f "$MODS_ON/$module"
 }
 
@@ -612,6 +622,7 @@ packages_remove () {
           '#'* | '' | ' ' ) ;; # ignore comments and blank lines
           'tap '* )
             package=${line#tap }
+            [[ $package != homebrew/core ]] || break
             if ! log=$(brew untap "$package"); then
               echo "$log"
               return 1
@@ -825,7 +836,7 @@ link_file () {
   local nicedst=$(fmt bold $norm_dst)
   local user_input=
 
-  info $lvl "Linking $(fmt bold "$(dirname "$norm_dst") -> $src")."
+  info $lvl "Linking $(fmt bold "$(dirname "$nicedst") -> $src")."
   if ! [[ -f $norm_src || -d $norm_src || -L $norm_src ]]; then
     fail $lvl "Source file $nicesrc does not exist."
     return 1
