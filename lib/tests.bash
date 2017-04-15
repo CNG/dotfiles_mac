@@ -17,10 +17,13 @@ link_file_test () {
     # set up files
     mkdir -p sources
     for i in {1..4}; do mkdir -p links/$i; done
+    mkdir sources/"Space Folder"
+    mkdir links/"another space folder"
 
     echo "A" > sources/file1.symlink
     echo "C" > sources/file3.symlink
     echo "D" > sources/file4.symlink
+    echo "E" > sources/"Space Folder"/file5.symlink
     link_file "../../sources/file1.symlink"  "links/1/file1.symlink"
     link_file "$(pwd)/sources/file1.symlink" "links/3/_file1.symlink"
 
@@ -36,6 +39,9 @@ link_file_test () {
     link_file "$(pwd)/sources/file3.symlink" "links/3/"
     link_file "../../sources/file4.symlink"  "links/1"
     link_file "$(pwd)/sources/file4.symlink" "links/3"
+    link_file "../../sources/Space Folder/file5.symlink"  "links/another space folder"
+    link_file "../../sources/Space Folder/file5.symlink"  "links/another space folder" > /dev/null ||
+      fail "link_file failed despite 'links/another space folder' already pointing correctly."
     link_file "../../sources/file1.missing"  "links/2/_file1.symlink" > /dev/null &&
       fail "link_file did not fail despite ../../sources/file1.missing not existing."
     link_file "../../sources/file2.missing"  "links/2/_file2" > /dev/null &&
@@ -75,9 +81,9 @@ link_file_test () {
 
     confirm_filecount '.'              2
     if [[ $conflict_action =~ ^backup ]]; then
-      confirm_filecount 'links'        5
+      confirm_filecount 'links'        6
     else
-      confirm_filecount 'links'        4
+      confirm_filecount 'links'        5
     fi
     if ! [[ $conflict_action =~ ^(backup|overwrite) ]]; then
       confirm_filecount 'links/1'      5
@@ -85,7 +91,9 @@ link_file_test () {
     confirm_filecount 'links/2'        0
     confirm_filecount 'links/3'        6
     confirm_filecount 'links/4'        2
-    confirm_filecount 'sources'        5
+    confirm_filecount 'links/another space folder' 1
+    confirm_filecount 'sources'        6
+    confirm_filecount 'sources/Space Folder' 1
     confirm_filecount 'sources/others' 1
 
     if ! [[ $conflict_action =~ ^(backup|overwrite) ]]; then
@@ -98,6 +106,7 @@ link_file_test () {
     confirm_symlink "$(pwd)/sources/file2.symlink" "links/3/_file2"
     confirm_symlink "$(pwd)/sources/file3.symlink" "links/3/file3.symlink"
     confirm_symlink "$(pwd)/sources/file4.symlink" "links/3/file4.symlink"
+    confirm_symlink "../../sources/Space Folder/file5.symlink" "links/another space folder/file5.symlink"
     confirm_symlink "../../sources"                "links/3/sources"
     confirm_symlink "../../sources/others"         "links/3/others"
     confirm_symlink "$(pwd)/sources"               "links/4/sources"

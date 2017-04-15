@@ -843,7 +843,7 @@ link_file () {
   fi
 
   if [[ -f $norm_dst || -d $norm_dst || -L $norm_dst ]]; then
-    if [[ $(readlink $norm_dst) = $src ]]; then
+    if [[ $(readlink "$norm_dst") = $src ]]; then
       okay $lvl "$nicedst already points to $nicesrc"
       return 0
     fi
