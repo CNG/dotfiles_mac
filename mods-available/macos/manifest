@@ -1,3 +1,6 @@
+# access ssh key passwords from script
+brew 'keychain'
+
 # services management
 cask 'lingon-x'
 

@@ -3,67 +3,62 @@
 	"color_scheme": "Packages/Color Scheme - Default/Solarized (Dark).tmTheme",
 	"default_encoding": "UTF-8",
 	"default_line_ending": "unix",
-	"font_size": 18,
+	"draw_white_space": "all",
+	"ensure_newline_at_eof_on_save": true,
+	"file_exclude_patterns":
+	[
+		"*.pyc",
+		"*.pyo",
+		"*.exe",
+		"*.dll",
+		"*.obj",
+		"*.o",
+		"*.a",
+		"*.lib",
+		"*.so",
+		"*.dylib",
+		"*.ncb",
+		"*.sdf",
+		"*.suo",
+		"*.pdb",
+		"*.idb",
+		".DS_Store",
+		"*.class",
+		"*.psd",
+		"*.db",
+		"*.sublime-workspace",
+		"Desktop.ini",
+		"._*",
+		"Thumbs.db",
+		".Spotlight-V100",
+		".Trashes"
+	],
+	"folder_exclude_patterns":
+	[
+		".git",
+		".svn",
+		"node_modules",
+		".hg",
+		"CVS"
+	],
+	"font_size": 17,
+	"highlight_modified_tabs": true,
 	"ignored_packages":
 	[
 		"Vintage"
 	],
+	"line_padding_bottom": 5,
+	"match_brackets": true,
+	"match_brackets_angle": true,
+	"remember_open_files": false,
 	"rulers":
 	[
 		80,
 		120
 	],
+	"show_encoding": true,
+	"show_line_endings": true,
 	"tab_size": 2,
 	"translate_tabs_to_spaces": true,
-	// "translate_tabs_to_spaces": true
-  // "detect_indentation": false,
-	"draw_white_space": "all", //none, selection, all
-	"ensure_newline_at_eof_on_save": true,
-	"file_exclude_patterns":
-		[
-			"*.pyc",
-			"*.pyo",
-			"*.exe",
-			"*.dll",
-			"*.obj",
-			"*.o",
-			"*.a",
-			"*.lib",
-			"*.so",
-			"*.dylib",
-			"*.ncb",
-			"*.sdf",
-			"*.suo",
-			"*.pdb",
-			"*.idb",
-			".DS_Store",
-			"*.class",
-			"*.psd",
-			"*.db",
-			"*.sublime-workspace",
-			"Desktop.ini",
-			"._*",
-			"Thumbs.db",
-			".Spotlight-V100",
-			".Trashes"
-		],
-	"folder_exclude_patterns":
-		[
-			".git",
-			".svn",
-			"node_modules",
-			".hg",
-			"CVS"
-		],
-	// "font_face": "Monaco",
-	"highlight_modified_tabs": true,
-	// "hot_exit": false,
-	"line_padding_bottom": 5,
-	"match_brackets": true,
-	"match_brackets_angle": true,
-	"remember_open_files": false,
-	"show_line_endings": true,
-	"trim_trailing_white_space_on_save": true,
-	// "word_wrap": true
-	"show_encoding": true
+	"trim_trailing_white_space_on_save": true
 }

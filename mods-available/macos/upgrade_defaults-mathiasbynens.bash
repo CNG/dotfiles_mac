@@ -40,7 +40,9 @@ defaults -currentHost write com.apple.systemuiserver dontAutoLoad -array \
 defaults write com.apple.systemuiserver menuExtras -array \
 	"/System/Library/CoreServices/Menu Extras/Bluetooth.menu" \
 	"/System/Library/CoreServices/Menu Extras/AirPort.menu" \
-	"/System/Library/CoreServices/Menu Extras/Battery.menu" \
+  "/System/Library/CoreServices/Menu Extras/Battery.menu" \
+  "/System/Library/CoreServices/Menu Extras/Volume.menu" \
+  "/System/Library/CoreServices/Menu Extras/TextInput.menu" \
 	"/System/Library/CoreServices/Menu Extras/Clock.menu"
 
 # Set highlight color to green
@@ -116,6 +118,9 @@ sudo systemsetup -setcomputersleep Off > /dev/null
 
 # Disable Notification Center and remove the menu bar icon
 launchctl unload -w /System/Library/LaunchAgents/com.apple.notificationcenterui.plist 2> /dev/null
+# remove the Notification Center menu bar icon
+[[ ! -f /System/Library/CoreServices/SystemUIServer.app/Contents/Resources/menuitemNormal.pdf ]] ||
+sudo rm -f /System/Library/CoreServices/SystemUIServer.app/Contents/Resources/menuitemNormal.pdf
 
 # Disable automatic capitalization as it’s annoying when typing code
 defaults write NSGlobalDomain NSAutomaticCapitalizationEnabled -bool false

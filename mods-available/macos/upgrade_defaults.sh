@@ -3,6 +3,9 @@
 # echo "› sudo softwareupdate -i -a"
 # sudo softwareupdate -i -a
 
+# turn on keychain
+keychain
+
 # allow sudo without password
 # TODO this command works pasted but not from script, still need to debug
 # plus it's not wise to not use visudo anyway...
@@ -16,8 +19,12 @@
 # TODO: abstract this
 if [[ -d /Volumes/Striped ]]; then
   scutil --set HostName "CharlieDesktop"
+  scutil --set LocalHostName "CharlieDesktop"
+  scutil --set ComputerName "CharlieDesktop"
 else
   scutil --set HostName "CharlieLaptop"
+  scutil --set LocalHostName "CharlieLaptop"
+  scutil --set ComputerName "CharlieLaptop"
 fi
 
 # Delete Apple Crap
@@ -51,7 +58,26 @@ defaults write com.apple.HIToolbox.plist AppleEnabledInputSources -array \
   '{"Bundle ID" = "com.apple.inputmethod.Kotoeri";"Input Mode" = "com.apple.inputmethod.Japanese";InputSourceKind = "Input Mode";}' \
   '{"Bundle ID" = "com.apple.inputmethod.Kotoeri";"Input Mode" = "com.apple.inputmethod.Roman";InputSourceKind = "Input Mode";}' \
   '{"Bundle ID" = "com.apple.inputmethod.Kotoeri";"Input Mode" = "com.apple.inputmethod.Japanese.Katakana";InputSourceKind = "Input Mode";}' \
-  '{"Bundle ID" = "com.apple.inputmethod.Kotoeri";InputSourceKind = "Keyboard Input Method";}'
+  '{"Bundle ID" = "com.apple.inputmethod.Kotoeri";InputSourceKind = "Keyboard Input Method";}' \
+  '{"Bundle ID" = "com.apple.50onPaletteIM";InputSourceKind = "Non Keyboard Input Method";}'
+
+# Enable shortcut keys to switch input types, haven't confirmed 60 and 61 never change
+/usr/libexec/PlistBuddy -c "Set :AppleSymbolicHotKeys:60:enabled true" ~/Library/Preferences/com.apple.symbolichotkeys.plist
+/usr/libexec/PlistBuddy -c "Set :AppleSymbolicHotKeys:61:enabled true" ~/Library/Preferences/com.apple.symbolichotkeys.plist
+
+# Stop console spam:
+# (com.apple.wifivelocityd): Service only ran for 0 seconds. Pushing respawn out by 10 seconds.
+# http://www.insanelymac.com/forum/topic/317694-wifi-wifivelocityd-spamming-system-log/
+sudo defaults write /System/Library/LaunchDaemons/com.apple.wifivelocityd.plist Disabled -bool YES
+
+# Enable screen sharing
+sudo defaults write /var/db/launchd.db/com.apple.launchd/overrides.plist com.apple.screensharing -dict Disabled -bool false
+sudo launchctl load -w /System/Library/LaunchDaemons/com.apple.screensharing.plist
+# Enable file sharing
+sudo launchctl load -w /System/Library/LaunchDaemons/com.apple.smbd.plist
+sudo defaults write /Library/Preferences/SystemConfiguration/com.apple.smb.server.plist EnabledServices -array disk
+# Enable remote login
+sudo systemsetup -f -setremotelogin on
 
 # Desktop view settings
 # TODO defaults read com.apple.finder.plist DesktopViewSettings
