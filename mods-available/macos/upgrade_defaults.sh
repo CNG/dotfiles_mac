@@ -3,6 +3,10 @@
 # echo "› sudo softwareupdate -i -a"
 # sudo softwareupdate -i -a
 
+# This does not survive reboot. Need 'UseKeychain yes' in ~/.ssh/config
+# load identities from keychain
+# ssh-add -A
+
 # turn on keychain
 keychain
 
