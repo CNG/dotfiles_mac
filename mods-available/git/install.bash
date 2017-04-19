@@ -21,9 +21,9 @@ create_local_config() {
     fi
 
     #local git_authorname git_authoremail
-    user $lvl "$(fmt bold What is your Github author name?)"
+    user $lvl "$(fmt bold 'What is your Github author name?')"
     read -e git_authorname
-    user $lvl "$(fmt bold What is your Github author email?)"
+    user $lvl "$(fmt bold 'What is your Github author email?')"
     read -e git_authoremail
 
     sed -e "s/AUTHORNAME/$git_authorname/g" -e "s/AUTHOREMAIL/$git_authoremail/g" -e "s/GIT_CREDENTIAL_HELPER/$git_credential/g" "$target_file.example" > "$target_file"
