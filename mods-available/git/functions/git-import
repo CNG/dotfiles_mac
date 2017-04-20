@@ -1,0 +1,37 @@
+#!/bin/bash
+
+# Import a file or directory, with history, from a Git repository
+#
+# Usage: git-import path/to/repo/file/or/folder/to/import
+#
+# Inspiration:
+# - http://blog.neutrino.es/2012/git-copy-a-file-or-directory-from-another-repository-preserving-history/
+# - https://gist.github.com/voltagex/3888364
+
+
+set -o errexit
+
+# Make unique temporary directory
+temp=$PWD/_tmp_patches
+while [[ -d $temp ]]; do
+  temp=${temp}_
+done
+mkdir "$temp"
+
+# Make patches
+(
+  if [[ -d $1 ]]; then
+    cd "$1"
+    object=.
+  else
+    cd "${1%/*}"
+    object=${1##*/}
+  fi
+  git format-patch --thread -o "$temp" --root -- "$object"
+)
+
+# Apply patches, try aborting on error but ignore abort errors
+git am "$temp"/*.patch || git am --abort || :
+
+# Delete temporary directory
+rm -rf "$temp"
