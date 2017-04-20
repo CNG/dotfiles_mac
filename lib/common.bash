@@ -221,6 +221,7 @@ module_install () {
 }
 _module_install_inner () {
   local pth=$MODS_ON/$module
+  [[ -d $MODS_ON ]] || mkdir $MODS_ON
   link_file "../${MODS_ALL##*/}/$module" "$MODS_ON" $lvl2
   if [[ $module = base ]]; then
     scripts_execute "$pth" 'install' $lvl2
@@ -688,7 +689,7 @@ scripts_execute () {
   local count=0
 
   if ! [[ -h $pth || -d $pth ]]; then
-    fail $lvl "Invalid $allow_any_dir path $(fmt bold $pth)."
+    fail $lvl "Invalid $name script path $(fmt bold $pth)."
     return 1
   fi
 

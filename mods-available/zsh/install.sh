@@ -13,3 +13,7 @@ rm -rf /tmp/powerlinefonts
 
 # Disable path_helper since we manage $PATH separately
 [[ ! -x /usr/libexec/path_helper ]] || sudo chmod -x /usr/libexec/path_helper
+
+# Ignore insecure directories and continue [y] or abort compinit [n]?
+sudo chmod -R 755 /usr/local/share/zsh
+sudo chown -R root:staff /usr/local/share/zsh
