@@ -1,0 +1,36 @@
+#!/bin/bash
+
+# Delete all revision history of remote Git repo or Github gist with given hash
+#
+# Usage: git-delete-history HASH
+# Usage: git-delete-history git@github.com:CNG/dotfiles.git
+#
+# Example for https://gist.github.com/CNG/1019db1a536ad325590f:
+#   git-delete-history 1019db1a536ad325590f
+#
+# Inspiration: http://stackoverflow.com/a/26000395/172602
+
+set -o errexit
+
+# Make unique temporary directory
+# https://unix.stackexchange.com/a/84980/39419
+temp=`mktemp -d 2>/dev/null || mktemp -d -t 'temp'`
+
+(
+  cd "$temp"
+  if [[ $1 = *.git ]]; then
+    git clone $1 .
+  else
+    git clone git@gist.github.com:$1.git .
+  fi
+  git checkout --orphan latest_branch
+  git add -A
+  git commit -a --allow-empty-message -m ''
+  git branch -D master
+  git branch -m master
+  git gc --aggressive --prune=all
+  git push -f origin master
+)
+
+# Delete temporary directory
+rm -rf "$temp"
