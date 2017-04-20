@@ -6,3 +6,6 @@ cask 'lingon-x'
 
 tap 'OJFord/formulae'
 brew 'loginitems'
+
+# set defaults for open with
+brew 'duti'

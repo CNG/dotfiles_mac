@@ -16,6 +16,24 @@ keychain
 # If you plan to use scheduled job with cron, you need to type the following command to enable it:
 [[ -f /etc/crontab ]] || sudo touch /etc/crontab
 
+# Increase default disk spindown from 10 mins
+sudo pmset -a disksleep 100
+
+# Default applications for filetypes
+duti -s org.videolan.vlc .mov all
+duti -s org.videolan.vlc .mp4 all
+duti -s org.videolan.vlc .mkv all
+duti -s com.sublimetext.3 .txt all
+duti -s com.sublimetext.3 .py all
+duti -s com.sublimetext.3 .php all
+duti -s com.sublimetext.3 .sh all
+duti -s com.sublimetext.3 .bash all
+duti -s com.uranusjr.macdown .md all
+duti -s com.uranusjr.macdown .markdown all
+
+# Don't warn "You are opening the application “VLC” for the first time. Are you sure you want to open this application?"
+defaults write com.apple.LaunchServices LSQuarantine -bool NO
+
 # TODO: abstract this
 if [[ -d /Volumes/Striped ]]; then
   scutil --set HostName "CharlieDesktop"
