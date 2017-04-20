@@ -8,15 +8,11 @@
 # - http://blog.neutrino.es/2012/git-copy-a-file-or-directory-from-another-repository-preserving-history/
 # - https://gist.github.com/voltagex/3888364
 
-
 set -o errexit
 
 # Make unique temporary directory
-temp=$PWD/_tmp_patches
-while [[ -d $temp ]]; do
-  temp=${temp}_
-done
-mkdir "$temp"
+# https://unix.stackexchange.com/a/84980/39419
+temp=$(mktemp -d 2>/dev/null || mktemp -d -t 'temp')
 
 # Make patches
 (
