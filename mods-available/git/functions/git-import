@@ -21,7 +21,7 @@ fi
 
 # Make unique temporary directory
 # https://unix.stackexchange.com/a/84980/39419
-temp=$(mktemp -d 2>/dev/null || mktemp -d -t 'temp')
+temp=$(mktemp -p /var/tmp -d 2>/dev/null || mktemp -d -t 'temp')
 
 # Make patches
 (
