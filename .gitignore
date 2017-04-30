@@ -3,4 +3,4 @@ _resources
 *.local.symlink
 *.local.sh
 *.local.bash
-
+private/
