@@ -6,8 +6,8 @@ fpath=($DOTFILES/mods-enabled/*/functions $fpath)
 autoload -U $DOTFILES/mods-enabled/*/functions/*(:t)
 
 HISTFILE=~/.zsh_history
-HISTSIZE=10000
-SAVEHIST=10000
+HISTSIZE=
+SAVEHIST=
 
 setopt NO_BG_NICE # don't nice background tasks
 setopt NO_HUP
@@ -15,7 +15,6 @@ setopt NO_LIST_BEEP
 setopt LOCAL_OPTIONS # allow functions to have local options
 setopt LOCAL_TRAPS # allow functions to have local traps
 setopt HIST_VERIFY
-setopt SHARE_HISTORY # share history between sessions ???
 setopt EXTENDED_HISTORY # add timestamps to history
 setopt PROMPT_SUBST
 setopt CORRECT
@@ -23,9 +22,16 @@ setopt COMPLETE_IN_WORD
 #setopt IGNORE_EOF # CTRL+D won't exit shell
 #setopt IGNORE_EOF=2 # CTRL+D twice to exit shell
 
-setopt APPEND_HISTORY # adds history
-setopt INC_APPEND_HISTORY SHARE_HISTORY  # adds history incrementally and share it across sessions
-setopt HIST_IGNORE_ALL_DUPS  # don't record dupes in history
+# These three options should be considered mutually exclusive:
+#setopt INC_APPEND_HISTORY  # adds history incrementally
+setopt INC_APPEND_HISTORY_TIME # history written after command finished so time is recorded correctly in EXTENDED_HISTORY format
+#setopt SHARE_HISTORY # share history between sessions
+
+# I think APPEND_HISTORY is also redundant if INC_APPEND_HISTORY is set.
+# setopt APPEND_HISTORY # adds history rather than replaces it
+
+# setopt HIST_IGNORE_ALL_DUPS  # don't record dupes in history
+setopt HIST_IGNORE_DUPS # don't record in history if duplicate of previous event
 setopt HIST_REDUCE_BLANKS
 
 # don't expand aliases _before_ completion has finished
