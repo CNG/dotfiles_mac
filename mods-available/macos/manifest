@@ -9,3 +9,6 @@ brew 'loginitems'
 
 # set defaults for open with
 brew 'duti'
+
+# Mechanical keyboard remapping
+cask 'karabiner-elements'
