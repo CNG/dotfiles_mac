@@ -73,10 +73,10 @@ defaults write com.apple.inputmethod.Kotoeri.plist JIMPrefTypingMethodKey 0
 defaults write com.apple.inputmethod.Kotoeri.plist JIMPrefVersionKey 1
 
 # Keyboards
-defaults write com.apple.HIToolbox.plist AppleCurrentKeyboardLayoutInputSourceID "com.apple.keylayout.US"
+defaults write com.apple.HIToolbox.plist AppleCurrentKeyboardLayoutInputSourceID "com.apple.keylayout.Dvorak"
 defaults write com.apple.HIToolbox.plist AppleEnabledInputSources -array \
   '{InputSourceKind = "Keyboard Layout";"KeyboardLayout ID" = 0;"KeyboardLayout Name" = "U.S.";}' \
-  '{InputSourceKind = "Keyboard Layout";"KeyboardLayout ID" = 16301;"KeyboardLayout Name" = "DVORAK - QWERTY CMD";}' \
+  '{InputSourceKind = "Keyboard Layout";"KeyboardLayout ID" = 16300;"KeyboardLayout Name" = "Dvorak";}' \
   '{"Bundle ID" = "com.apple.inputmethod.Kotoeri";"Input Mode" = "com.apple.inputmethod.Japanese";InputSourceKind = "Input Mode";}' \
   '{"Bundle ID" = "com.apple.inputmethod.Kotoeri";"Input Mode" = "com.apple.inputmethod.Roman";InputSourceKind = "Input Mode";}' \
   '{"Bundle ID" = "com.apple.inputmethod.Kotoeri";"Input Mode" = "com.apple.inputmethod.Japanese.Katakana";InputSourceKind = "Input Mode";}' \
