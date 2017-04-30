@@ -11,7 +11,7 @@ install_command () {
   local lvl=${1:-0} # 0 unless second param set
   info $lvl "Installing dotfiles command."
   sudo chown -R :admin /usr/local
-  sudo find /usr/local -perm -200 -exec chmod g+w '{}' \+
+  sudo find /usr/local -perm -200 -exec chmod g+w '{}' \+ || true
   link_file "$APP_ROOT/dotfiles" /usr/local/bin $lvl
   okay $lvl "Done."
 }
