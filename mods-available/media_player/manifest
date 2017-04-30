@@ -3,4 +3,6 @@ cask 'plex-media-player'
 cask 'vlc'
 cask 'spotify'
 
-cask 'flash-npapi'
+# Commenting out till workaround for error:
+# A newer version of the software is already installed on this system
+# cask 'flash-npapi'
