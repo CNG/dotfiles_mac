@@ -43,7 +43,6 @@ print_usage () {
 
     $(fmt bold 'help')      Show this help page.
   "
-  return 1
 }
 
 #######################################

@@ -76,11 +76,12 @@ main () {
     cleanup   ) hdlr_cleanup   "${@:2}" ;;
     list      ) hdlr_list      "${@:2}" ;;
     tests     ) hdlr_tests     "${@:2}" ;;
-    * | help  ) print_usage             ;;
+    help      ) print_usage             ;;
+    *         ) print_usage; return 1   ;;
   esac
   trap - ERR
 }
 
-main $@
+main "$@"
 
 #TODO autocomplete http://askubuntu.com/questions/68175/how-to-create-script-with-auto-complete
