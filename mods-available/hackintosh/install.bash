@@ -16,8 +16,10 @@ install_hackintosh() {
   link_file "$MAINSTORAGE/Documents/Projects" "$HOME/projects" $lvl
 
   # Karabiner Elements
-  src="$modpath/karabiner.json"
-  dst=~/.config/karabiner/karabiner.json
+  src=$modpath/karabiner.json
+  dst=$HOME/.config/karabiner
+  mkdir -p "$dst"
+  dst=$dst/karabiner.json
   link_file "$src" "$dst" $lvl
 
   # Enable accessibility settings
@@ -58,6 +60,7 @@ install_hackintosh() {
   cd -
 
   # same as in macos module but remove wifi and battery (which didn't show anyway)
+  # TODO: use arrayremove/add command
   defaults write com.apple.systemuiserver menuExtras -array \
     "/System/Library/CoreServices/Menu Extras/Bluetooth.menu" \
     "/System/Library/CoreServices/Menu Extras/Volume.menu" \

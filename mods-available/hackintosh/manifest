@@ -1,2 +1,4 @@
-cask 'karabiner-elements'
 cask 'clover-configurator'
+
+# Mechanical keyboard remapping
+cask 'karabiner-elements'

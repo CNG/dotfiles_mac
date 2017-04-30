@@ -12,7 +12,7 @@ remove_hackintosh() {
   local dst
 
   # Karabiner Elements
-  dst=~/.config/karabiner
+  dst=$HOME/.config/karabiner
   trash_file "$dst" $lvl
 }
 
