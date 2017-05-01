@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+
+main () {(
+  cd "$DOTFILES/private"
+
+  # get any remote updates
+  git pull
+
+  sync_zsh_history "$@"
+)}
+
+sync_zsh_history () {
+  # optional note to include in commit message
+  local note=${1:-}
+  [[ -z $note ]] || note=" [$note]"
+  # merge local Zsh history if recently modified
+  local merged=zsh_history
+  local splith=${merged}_$(hostname)
+  local localh=$HOME/.$merged
+  if [[ $(find "$localh" -mtime -90m -print) ]]; then
+    touch $merged $splith
+    command diff --changed-group-format="%>" --unchanged-group-format="" $merged "$localh" >> $splith
+    if [[ $(which sponge) ]]; then
+      cat "$localh" $merged |
+        tr '\n' '\0' | sed 's|\\\x00|\\\n|g' | LC_ALL='C' sort -zu | tr '\0' '\n' |
+        sponge $merged
+    else
+      echo "$(cat "$localh" $merged | tr '\n' '\0' | sed 's|\\\x00|\n|g' |
+        LC_ALL='C' sort -zu | tr '\0' '\n')" > $merged
+    fi
+    git add $merged $splith
+    git commit -m "$(hostname) $merged$note"
+    git push
+  fi
+  # copy any recent remote updates to local Zsh history
+  cmp --silent $merged "$localh" || cp -a $merged "$localh"
+}
+
+main "$@"
