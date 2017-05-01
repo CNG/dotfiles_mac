@@ -10,11 +10,34 @@
 # turn on keychain
 keychain
 
+defaults write NSGlobalDomain com.apple.springing.delay -float 1
+
 # allow sudo without password
 # TODO this command works pasted but not from script, still need to debug
 # plus it's not wise to not use visudo anyway...
 #sudo sed -i 's|^[[:space:]#]+(%wheel[[:space:]]+ALL[[:space:]]*=[[:space:]]*\([[:space:]]*ALL[[:space:]]*\)[[:space:]]*NOPASSWD:[[:space:]]*ALL.*)|\1|' /etc/sudoers
 #sudo dscl . append /Groups/wheel GroupMembership $(whoami)
+#
+# enable root account
+# sudo passwd # enter new password
+# enable root ssh login
+# sudo sed -i '' 's/^#PermitRootLogin prohibit-password/PermitRootLogin without-password/' /etc/ssh/sshd_config
+# set up root ssh
+# sudo ssh-keygen -f /var/root/.ssh/id_rsa -t rsa -N ''
+# copy android ssh key to root mac
+# echo 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC3F613kOAYA6WfOvQWaHzxMhmeopLqqmCUnJy7iM2TpBqoYrkmp+nVg7mBhsBocO+C9kw5RwR6l0VHnmTQuXQ6YPV94pUciEfBxbI7GTJPFHY26qXq0aItvJ6n5lJPzk+m2CAX4QlCqpXij8peoHe9rhkTU87rEbZA2dkd20nJCLy9LwGLJkkENyX5xX+WbLjJlYHFrkTJyd0ir1uI5zI9pV2v+utHBw4mBOBCO4iAQzqbEV7DNjIV6MEU6paBIoBdqOmTup3DEXonDGsthxGof/Sr8B//NHzGU5OBWlTACPO+S6BtuPeecSoM3I0sGWIbw+bZT/85Fx0Li4+tyoNd (null)@localhost' | sudo tee --append /var/root/.ssh/authorized_keys
+#
+# from mac:
+# adb reverse tcp:2223 tcp:22
+# from android adb shell or ssh over other forwarded port:
+# cat /data/data/com.arachnoid.sshelper/home/.ssh/id_rsa.pub
+# ssh -i'/data/data/com.arachnoid.sshelper/home/.ssh/id_rsa' -oStrictHostKeyChecking=no -p2223 root@127.0.0.1
+#
+# rsync -av -e 'ssh -oProxyCommand="adb-channel tcp:2222 com.arachnoid.sshelper/.SSHelperActivity 1"' -n localhost:/storage/emulated/0
+# rsync -avzH -P --delete --delete-excluded --force --numeric-ids -e 'ssh -oProxyCommand="adb-channel tcp:2222 com.arachnoid.sshelper/.SSHelperActivity 1"' -n localhost:/storage/emulated/0/ /Volumes/Striped/Backups/Phones/Nexus6P
+# rsync -avzH -P --delete --delete-excluded --force -e 'ssh -oProxyCommand="adb-channel tcp:2222 com.arachnoid.sshelper/.SSHelperActivity 1"' localhost:/storage/emulated/0/ /Volumes/Striped/Backups/Phones/Nexus6P
+
+# sudo su root -c 'cd /Volumes/Striped/Backups/Phones/current/data/media/0 && pax -rwl * ../../../../Nexus6Pe'
 
 # Mountain Lion deletes the file /etc/crontab which is needed for crontab to run.
 # If you plan to use scheduled job with cron, you need to type the following command to enable it:
@@ -32,6 +55,7 @@ duti -s com.sublimetext.3 .py all
 duti -s com.sublimetext.3 .php all
 duti -s com.sublimetext.3 .sh all
 duti -s com.sublimetext.3 .bash all
+duti -s com.sublimetext.3 .log all
 duti -s com.uranusjr.macdown .md all
 duti -s com.uranusjr.macdown .markdown all
 

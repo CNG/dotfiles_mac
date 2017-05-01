@@ -5,9 +5,9 @@
         protocol = https
 [alias]
         co = checkout
-        promote = !$ZSH/bin/git-promote
-        wtf     = !$ZSH/bin/git-wtf
-        rank-contributors = !$ZSH/bin/git-rank-contributors
+        promote = !$DOTFILES/mods-available/git/functions/git-promote
+        wtf     = !$DOTFILES/mods-available/git/functions/git-wtf
+        rank-contributors = !$DOTFILES/mods-available/git/functions/git-rank-contributors
         count   = !git shortlog -sn
 [color]
         diff = auto
@@ -17,6 +17,8 @@
 [core]
         excludesfile = ~/.gitignore
         editor = vim
+[rebase]
+        autosquash = true
 [apply]
         whitespace = nowarn
 [mergetool]
