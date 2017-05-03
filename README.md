@@ -12,6 +12,10 @@ Also, you can create these two Zsh configuration files to contain any personal s
 * [`zshenv.local.symlink`](mods-available/zsh/zshenv.local.symlink)
 * [`zshrc.local.symlink`](mods-available/zsh/zshrc.local.symlink)
 
+## Standalone functions
+
+This project contains [functions and scripts](functions.md) that might be useful outside the project itself.
+
 ## Installation
 
 You can install this program anywhere, but many similar projects use `~/.dotfiles`.
@@ -63,41 +67,41 @@ Modules are not actually installed until the `dotfiles install module_name` comm
 ## Usage
 
 * **`dotfiles install`**
-    Install the required module, **base**.  
+    Install the required module, **base**.
     **`dotfiles install A`**
-    Install a module.  
+    Install a module.
     **`dotfiles install A B C ...`**
-    Install multiple modules.  
+    Install multiple modules.
     **`dotfiles install --all`**
-    Install all available modules.  
+    Install all available modules.
     Modules following `--force` will be reinstalled.
 
 * **`dotfiles upgrade`**
-    Upgrade all installed modules.  
+    Upgrade all installed modules.
     **`dotfiles upgrade A`**
-    Upgrade a module.  
+    Upgrade a module.
     **`dotfiles upgrade A B C ...`**
     Upgrade multiple modules.
 
 * **`dotfiles remove A`**
-    Remove a module.  
+    Remove a module.
     **`dotfiles remove A B C ...`**
-    Remove multiple modules.  
+    Remove multiple modules.
     **`dotfiles remove --all`**
-    Remove all available modules.  
+    Remove all available modules.
     Modules following `--force` will be removed again.
 
-* **`dotfiles cleanup`**  
+* **`dotfiles cleanup`**
     Uninstall any installed `brew` packages that are not required by currently installed modules.
     This does not run any module scripts or modify symbolic links but only analyzes the required package manifests in each installed module and removes any extras that were installed manually or by a module that has since changed.
 
 
 * **`dotfiles list`**
-    List modules installed and available but not installed.  
+    List modules installed and available but not installed.
     **`dotfiles list --installed`**
-    List modules installed.  
+    List modules installed.
     **`dotfiles list --available`**
-    List all modules.  
+    List all modules.
     **`dotfiles list --not-installed`**
     List modules available but not installed.
 
