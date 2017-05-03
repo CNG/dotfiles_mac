@@ -1,0 +1,173 @@
+#!/usr/bin/env bash
+
+# Previously I had lists of commands like `defaults write com.apple...` for
+# setting up my system. I had to manually update those commands whenever I
+# changed something I wanted to be permanent.
+
+# I wanted to convert that system to one where the settings are stored in a file
+# and the file could either be applied to the system or updated from the system.
+# It seemed logical to have the file format be the same as that used by
+# `defaults read` so I could do `defaults read com.apple... > file` and then
+# modify the file to contain my desired settings.
+
+# This script was the start of that, though I realized it would be difficult or
+# impossible to have `defaults write` deal with arrays and dictionaries. I may
+# forgo this solution in favor of using XML based plist files that PlistBuddy
+# could edit. I think I still should use `defaults` to apply settings since OSX
+# has an app notification framework I would skip if I modified
+# `~/Library/Preferences` directly.
+
+
+# Exit if any command returns nonzero or unset variable referenced.
+set -o errexit -o pipefail -o nounset
+
+# Reference material
+
+# echo "defaults read \"$plist\" \"$key\""
+# echo "$current_value"
+# defaults read "org.m0k.transmission.plist" "PiecesBar"
+# 1
+# defaults read "org.m0k.transmission.plist" "SelectedPrefView"
+# TOOLBAR_GROUPS
+# defaults read "org.m0k.transmission.plist" "NSToolbar Configuration TRMainToolbar"
+# {
+#     "TB Display Mode" = 2;
+#     "TB Icon Size Mode" = 1;
+#     "TB Is Shown" = 1;
+#     "TB Size Mode" = 1;
+# }
+
+# /usr/libexec/PlistBuddy -c Print "$plist"
+#   output like:
+#     NSTableView Hidden Columns InspectorTable = Array {
+#     DisplayGroupRowRatio = 1
+
+# /usr/libexec/PlistBuddy -c Print "$plist" | perl -lne 'print $1 if /^    (\S.*\S|\S) =/'
+#   output like:
+# NSTableView Hidden Columns InspectorTable
+# InspectorContentHeightTracker
+
+# plutil can't read the format output by defaults
+# plutil -replace "$key" -$current_type "$current_value" "_$plist"
+
+# defaults doesn't seem to write to files anymore... corrupts instead
+# defaults write "$plist" "$key" "$current_value"
+
+
+#######################################
+# Get current system default for given key and write it to given plist file,
+# updating the existing value, which must exist.
+# Globals:
+#   None
+# Arguments:
+#   plist  (string) Filename of plist to update with current system defaults
+#   key    (string) Key whose value is to be updated
+# Returns:
+#   None
+#######################################
+put_default_to_file () {
+  local plist=$1
+  local key=$2
+
+  local current_value current_type
+  current_value=$(defaults read "$(basename "$plist")" "$key")
+  current_value=${current_value//$'\n'/$'\n'    }
+  # using value from system, so use type from system
+  current_type=$(defaults read-type "$(basename "$plist")" "$key")
+  current_type=${current_type#Type is }
+
+  # build regex to replace value in file
+  local k m v
+  if [[ $key =~ \  ]]; then
+    k="\"$key\""
+  else
+    k="$key"
+  fi
+  if [[ $current_value == *$'\n'* ]]; then
+    m='    )(.*?    .'
+    v="$current_value"
+  else
+    m=')(.*?'
+    if [[ $current_value =~ [^A-Za-z0-9] && $current_type != data ]]; then
+      v="\"$current_value\""
+    else
+      v="$current_value"
+    fi
+  fi
+  local regex="s\`(?<=^    $k = $m)(?=;$)\`$v\`msg"
+
+  # update file with current value
+  perl -0777 -i -pe "$regex" "$plist"
+}
+
+#######################################
+# Set system default for given domain and key.
+# NOTE: This does not handle arrays and dictionaries.
+# Globals:
+#   None
+# Arguments:
+#   plist  (string) Filename of plist to update with current system defaults
+#   key    (string) Key whose value is to be updated
+# Returns:
+#   None
+#######################################
+set_default_from_file () {
+  local plist=$1
+  local key=$2
+
+  local plist_value current_type
+  plist_value=$(defaults read "$plist" "$key")
+  # using value from file, but use type from system because file is simplified
+  current_type=$(defaults read-type "$(basename "$plist")" "$key")
+  current_type=${current_type#Type is }
+
+  case $current_type in
+    data )
+      plist_value=${plist_value#<}
+      plist_value=${plist_value%>}
+      plist_value=${plist_value// /}
+      ;;
+    boolean )
+      plist_value=${plist_value//1/yes}
+      plist_value=${plist_value//0/no}
+      ;;
+    array|dict )
+      echo "Support for $current_type not implemented. Skipping $key!"
+      return 0
+      ;;
+  esac
+
+  defaults write "$(basename "$plist")" "$key" -$current_type "$plist_value"
+}
+
+main () {
+  [[ -f $1 ]] || return 1
+  local plist keys
+  plist=$(cd "$(dirname "$1")"; pwd)/$(basename "$1")
+
+  IFS=$'\r\n'
+  keys=($(/usr/libexec/PlistBuddy -c Print "$plist" | perl -lne 'print $1 if /^    (\S.*\S|\S) =/'))
+
+  case ${2:-} in
+
+    from_file )
+      for key in ${keys[@]}; do
+        set_default_from_file "$plist" "$key"
+      done
+      ;;
+
+    from_system )
+      for key in ${keys[@]}; do
+        put_default_to_file "$plist" "$key"
+      done
+      ;;
+
+    * )
+      echo "Usage: $0 plist_file [ from_system | from_file ]"
+      return 1
+      ;;
+
+  esac
+}
+
+main "$@"
