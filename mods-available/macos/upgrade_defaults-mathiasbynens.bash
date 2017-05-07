@@ -152,13 +152,16 @@ sudo pmset -a hibernatemode 0
 
 # I got rm: /private/var/vm/sleepimage: No such file or directory
 # on macOS Sierra 2017-04-05 - @CNG
+# Now I got rm: cannot remove '/private/var/vm/sleepimage': Operation not permitted
+# on macOS Sierra 2017-05-06 - @CNG
 if [[ -f /private/var/vm/sleepimage ]]; then
   # Remove the sleep image file to save disk space
-  sudo rm /private/var/vm/sleepimage
-  # Create a zero-byte file instead…
-  sudo touch /private/var/vm/sleepimage
-  # …and make sure it can’t be rewritten
-  sudo chflags uchg /private/var/vm/sleepimage
+  if sudo rm /private/var/vm/sleepimage; then
+    # Create a zero-byte file instead…
+    sudo touch /private/var/vm/sleepimage
+    # …and make sure it can’t be rewritten
+    sudo chflags uchg /private/var/vm/sleepimage
+  fi
 fi
 
 ###############################################################################
