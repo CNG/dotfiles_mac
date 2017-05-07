@@ -1,5 +1,6 @@
 # my products and services
-cask 'backblaze'
+#cask 'backblaze'
+cask 'arq'
 cask 'drobo-dashboard'
 cask 'folding-at-home'
 
@@ -10,3 +11,8 @@ mas 'PeakHour 3', id: 961578824
 #other
 #mas 'Microsoft Remote Desktop', id: 715768417
 mas 'Stock + Pro', id: 534067900
+
+# bittorrent client
+cask 'transmission'
+# automated feed downloading
+cask 'automatic'
