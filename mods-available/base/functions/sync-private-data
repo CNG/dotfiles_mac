@@ -1,21 +1,42 @@
 #!/usr/bin/env bash
 
 # Exit if any command returns nonzero or unset variable referenced.
-set -o errexit -o pipefail -o nounset
+#set -o errexit -o pipefail -o nounset
 
 main () {(
+  # optional note to include in commit message
+  local note=${1:-}
+  [[ -z $note ]] || note=" [$note]"
+
   cd "$DOTFILES/private"
 
   # get any remote updates
   git pull
 
-  sync_zsh_history "$@"
+  zsh_history
+  automatic
+
+  git push
 )}
 
-sync_zsh_history () {
-  # optional note to include in commit message
-  local note=${1:-}
-  [[ -z $note ]] || note=" [$note]"
+# These preference files apparently get updated frequently with last check
+# dates, etc., so let's just back them up once. We can delete the file manually
+# if we want to update the repo version.
+automatic () {
+  local f folder='Library/Application Support/Automatic'
+  [[ -d $HOME/$folder ]] || return 0 # assume Automatic not installed
+  mkdir -p "$folder"
+  f="$folder/License"
+  [[ -f $f ]] || cp -a "$HOME/$f" "$folder"
+  f="$folder/Preferences"
+  [[ -f $f ]] || cp -a "$HOME/$f" "$folder"
+  f="$folder/Subscriptions"
+  [[ -f $f ]] || cp -a "$HOME/$f" "$folder"
+  git add -A "$folder"
+  git commit -m "$(hostname) Automatic prefs$note"
+}
+
+zsh_history () {
   # merge local Zsh history if recently modified
   local merged=zsh_history
   local splith=${merged}_$(hostname)
@@ -33,7 +54,6 @@ sync_zsh_history () {
     fi
     git add $merged $splith
     git commit -m "$(hostname) $merged$note"
-    git push
   fi
   # copy any recent remote updates to local Zsh history
   cmp --silent $merged "$localh" || cp -a $merged "$localh"

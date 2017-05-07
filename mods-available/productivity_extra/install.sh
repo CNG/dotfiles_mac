@@ -1,4 +1,3 @@
-
 #######################################
 #
 # Globals:
@@ -11,9 +10,6 @@
 install_productivity_extra() {
   local modpath=$MODS_ALL/productivity_extra
   local lvl=${1:-0} # 0 unless second param set
-
-  open '/usr/local/Caskroom/backblaze/latest/Backblaze Installer.app'
-
 }
 
 install_productivity_extra $lvl3
