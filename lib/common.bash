@@ -414,6 +414,7 @@ module_list () {
 # Remove Homebrew installed programs that are not in the cumulative Brewfiles.
 # Globals:
 #   APP_ROOT  (string) Application directory.
+#   MODS_ON   (string)  Path to symlinks indicating installed modules
 # Arguments:
 #   lvl  (int) Indentation level. Default 0.
 # Returns:

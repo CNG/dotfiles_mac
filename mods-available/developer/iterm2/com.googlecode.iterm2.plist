@@ -265,9 +265,13 @@
 	<key>NSWindow Frame SharedPreferences</key>
 	<string>269 122 796 473 0 0 3840 2137 </string>
 	<key>NSWindow Frame iTerm Window 0</key>
-	<string>976 437 585 452 0 0 1920 1057 </string>
+	<string>0 250 585 452 0 0 3840 2137 </string>
 	<key>NSWindow Frame iTerm Window 1</key>
-	<string>44 605 585 452 0 0 1920 1057 </string>
+	<string>107 1685 585 452 0 0 3840 2137 </string>
+	<key>NeverWarnAboutShortLivedSessions_8CD0C521-1F73-41C4-92A0-3D47D52EB3AB</key>
+	<true/>
+	<key>NeverWarnAboutShortLivedSessions_8CD0C521-1F73-41C4-92A0-3D47D52EB3AB_selection</key>
+	<integer>0</integer>
 	<key>New Bookmarks</key>
 	<array>
 		<dict>
@@ -977,7 +981,7 @@
 	<key>SUHasLaunchedBefore</key>
 	<string>1</string>
 	<key>SULastCheckTime</key>
-	<date>2017-04-16T01:25:46Z</date>
+	<date>2017-05-06T19:26:02Z</date>
 	<key>SUSendProfileInfo</key>
 	<false/>
 	<key>SmartPlacement</key>
