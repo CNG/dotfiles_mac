@@ -1,0 +1,31 @@
+{
+    autohide = 1;
+    "autohide-delay" = 0;
+    "autohide-time-modifier" = 0;
+    "dashboard-in-overlay" = 1;
+    "enable-spring-load-actions-on-all-items" = 1;
+    "expose-animation-duration" = "0.1";
+    "expose-group-by-app" = 0;
+    launchanim = 0;
+    mineffect = scale;
+    "minimize-to-application" = 1;
+    "mod-count" = 9;
+    "mouse-over-hilite-stack" = 1;
+    "mru-spaces" = 0;
+
+    // Clear dock
+    "persistent-apps" =     (
+    );
+    "persistent-others" =     (
+    );
+
+    "show-process-indicators" = 0;
+    showhidden = 1;
+    tilesize = 64;
+    "trash-full" = 1;
+    version = 1;
+    "wvous-bl-corner" = 5;
+    "wvous-bl-modifier" = 0;
+    "wvous-tr-corner" = 4;
+    "wvous-tr-modifier" = 0;
+}

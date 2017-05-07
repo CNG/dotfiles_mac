@@ -15,10 +15,14 @@ This script was the start of that, though I realized it would be difficult or im
 I may forgo this solution in favor of using XML based plist files that PlistBuddy could edit.
 I think I still should use `defaults` to apply settings since OSX has an app notification framework I would skip if I modified `~/Library/Preferences` directly.
 
+**[update-defaults-files](mods-available/base/functions/update-defaults-files)**
+
+Run [sync-defaults-simple](mods-available/base/functions/sync-defaults-simple) for each plist within `defaults` directories within all enabled modules.
+
 **[sync-private-data](mods-available/base/functions/sync-private-data)**
 
 This function is to allow for scheduled updating of the private files managed in a private repository assumed to be in a folder called `private` inside the dotfiles folder.
 
-sync_zsh_history stores additions to the shell history file in the private repo.
+`zsh_history` stores additions to the shell history file in the private repo.
 It also merges the histories of all managed computers and puts that on the local computer so it can be used for back searching.
 The function also automatically commits and pushes changes to the remote.

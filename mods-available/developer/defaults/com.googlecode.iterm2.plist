@@ -1,0 +1,7 @@
+{
+    LoadPrefsFromCustomFolder = 1;
+    PrefsCustomFolder = "~/.config/iterm2";
+    SUHasLaunchedBefore = 1;
+    // Do not display the annoying prompt when quitting iTerm
+    PromptOnQuit = 0;
+}

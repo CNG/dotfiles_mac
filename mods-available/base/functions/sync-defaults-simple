@@ -78,7 +78,7 @@ put_default_to_file () {
 
   # build regex to replace value in file
   local k m v
-  if [[ $key =~ \  ]]; then
+  if [[ $key =~ [^A-Za-z0-9] ]]; then
     k="\"$key\""
   else
     k="$key"

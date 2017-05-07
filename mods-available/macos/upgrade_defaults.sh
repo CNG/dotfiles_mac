@@ -85,17 +85,6 @@ loginitems -d 'iTunesHelper'
 # Disable gatekeeper, but don't have a specific need for this that i know of
 # sudo spctl --master-disable
 
-# Clear dock
-defaults write com.apple.dock persistent-apps -array
-defaults write com.apple.dock persistent-others -array
-
-# Japanese keyboard settings
-defaults write com.apple.inputmethod.Kotoeri.plist JIMPrefCapsLockActionKey 2
-defaults write com.apple.inputmethod.Kotoeri.plist JIMPrefCharacterForSlashKey 0
-defaults write com.apple.inputmethod.Kotoeri.plist JIMPrefRomajiKeyboardLayoutKey "com.apple.keylayout.US"
-defaults write com.apple.inputmethod.Kotoeri.plist JIMPrefTypingMethodKey 0
-defaults write com.apple.inputmethod.Kotoeri.plist JIMPrefVersionKey 1
-
 # Keyboards
 defaults write com.apple.HIToolbox.plist AppleCurrentKeyboardLayoutInputSourceID "com.apple.keylayout.Dvorak"
 defaults write com.apple.HIToolbox.plist AppleEnabledInputSources -array \
