@@ -1,0 +1,9 @@
+{
+    // Japanese keyboard settings
+    JIMPrefCapsLockActionKey = 2;
+    JIMPrefCharacterForSlashKey = 0;
+    JIMPrefConvertWithPunctuationKey = 0;
+    JIMPrefRomajiKeyboardLayoutKey = "com.apple.keylayout.US";
+    JIMPrefTypingMethodKey = 0;
+    JIMPrefVersionKey = 1;
+}

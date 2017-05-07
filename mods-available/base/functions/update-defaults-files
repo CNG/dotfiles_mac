@@ -1,0 +1,24 @@
+#!/usr/bin/env zsh
+
+# Exit if any command returns nonzero or unset variable referenced.
+set -o errexit -o pipefail -o nounset
+
+#######################################
+# Pass all defaults files through the function sync-defaults-simple in
+# from_system mode.
+# Globals:
+#   None
+# Arguments:
+#   Path  (string) Directory to search for subdirectories called "defaults"
+#     that contain the plists to update from the system's current defaults
+# Returns:
+#   None
+#######################################
+main () {
+  local root_path=${1:-}
+  [[ -d $root_path ]] || return 1
+  find -L "$root_path" -type f -path "*/mods-enabled/*/defaults/*" \
+    -exec zsh -c 'sync-defaults-simple {} from_system' \;
+}
+
+main "$DOTFILES"
