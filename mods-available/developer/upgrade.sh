@@ -22,12 +22,12 @@ upgrade_developer() {
   src="$modpath/iterm2"
   dst="$HOME/.config"
   link_file "$src" "$dst" $lvl
-  defaults write com.googlecode.iterm2 SUHasLaunchedBefore 1
-  defaults write com.googlecode.iterm2 PrefsCustomFolder "~/.config/iterm2"
-  defaults write com.googlecode.iterm2 LoadPrefsFromCustomFolder 1
-
-  # Don’t display the annoying prompt when quitting iTerm
-  defaults write com.googlecode.iterm2 PromptOnQuit -bool false
+  # # these are replicated in defaults folder but leaving here for now
+  # defaults write com.googlecode.iterm2 SUHasLaunchedBefore 1
+  # defaults write com.googlecode.iterm2 PrefsCustomFolder "~/.config/iterm2"
+  # defaults write com.googlecode.iterm2 LoadPrefsFromCustomFolder 1
+  # # Don’t display the annoying prompt when quitting iTerm
+  # defaults write com.googlecode.iterm2 PromptOnQuit -bool false
 }
 
 upgrade_developer $lvl3
