@@ -1,0 +1,247 @@
+#!/usr/bin/env bash
+
+# Another simple script that grew a bit more than warranted because shell is fun?
+
+NAME="transmission_incremental_load"
+AUTHOR="Charlie Gorichanaz <charlie@gorichanaz.com>"
+VERSION="1.0"
+SUMMARY="Incrementally move torrents to Transmission autoload directory after backup."
+DESCRIPTION="The Transmission bittorrent client on macOS can freeze upon adding too many
+torrents to the watched directory. The program must then be forcefully
+terminated, which causes data loss at best, and at worst, inability to reopen
+the program without completely clearing the torrent list and starting over. This
+circular situation arises when initially migrating to Transmission from another
+client or when migrating to a new system.
+
+The $NAME utility automates moving small batches of torrent files into the
+directory watched by Transmission and then waiting the estimated time required
+for Transmission to check existing data based on the cumulative size of the
+corresponding already downloaded files.
+
+It also provides rudimentary backup and restore of Transmission
+application state to hopefully allow for recovery in the event a hang cycle
+still occurs. State is automatically backed up before each batch move. State
+can be recovered with the restore subcommand.
+"
+
+#######################################
+# Print help.
+# Globals:
+#   NAME         (string)
+#   SUMMARY      (string)
+#   DESCRIPTION  (string)
+# Arguments:
+#   None
+# Returns:
+#   None
+#######################################
+print_help() {
+  # get formatting escapes (http://stackoverflow.com/a/2924755/172602)
+  local b=$(tput bold)
+  local u=$(tput smul)
+  local d=$(tput sgr0)
+  local NAME=${b}$NAME${d}
+
+  local com1="$NAME [ ${u}-v${d} | ${u}--verbose${d} | ${u}-q${d} | ${u}--quiet${d} ]"
+  local com2="${u}backups${d} ${u}pre_autoload${d} ${u}autoload${d}"
+  local syn1="$com1 ${b}move   ${d} ${u}qty${d} $com2 ${u}downloads${d}"
+  local syn2="$com1 ${b}backup ${d} $com2"
+  local syn3="$com1 ${b}restore${d} ${u}nth${d} $com2"
+
+  local help_text="${b}NAME${d}
+       $NAME -- $SUMMARY
+
+${b}SYNOPSIS${d}
+       $syn1
+       $syn2
+       $NAME ( ${u}-V${d} | ${u}--version${d} )
+       $NAME ( ${u}-h${d} | ${u}--help${d} )
+
+${b}DESCRIPTION${d}
+       $DESCRIPTION
+       Arguments:
+
+       qty                  Number of torrents to move per batch.
+       nth                  Sequential backup to restore where 1 is most recent.
+       backups              Directory to store application state backups.
+       pre_autoload         Directory of torrents to be moved to ${u}autoload${d}.
+       autoload             Directory set for auto add in Transmission settings.
+       downloads            Directory of downloaded data.
+
+       Options:
+
+       -q, --quiet          Cause $NAME to only output errors.
+       -v, --verbose        Cause $NAME to be verbose, outputting more
+                            informational messages.
+       -V, --version        Print version number.
+       -h, --help           Show this help.
+${b}AUTHOR${d}
+       $NAME was created by $AUTHOR."
+  printf "%s\n" "$help_text"
+  return 0
+}
+
+#######################################
+# Backup Transmission state.
+# Globals:
+#   VERBOSE           (bool)
+#   backups_dir       (string)
+#   autoload_dir      (string)
+#   pre_autoload_dir  (string)
+#   app_files         (array)
+# Arguments:
+#   None
+# Returns:
+#   None
+#######################################
+backup_transmission_state () {
+  local folder files
+  folder="$backups_dir/$(date "+%Y-%m-%d_%H%M%S")"
+  mkdir -p "$folder"
+  ! $VERBOSE || echo "$NAME: backing up state to $folder"
+  for f in "${app_files[@]}"; do
+    ! $VERBOSE || echo "$NAME: copying $f"
+    cp -a "$f" "$folder"
+  done
+  ! $VERBOSE || echo "$NAME: saved state in $folder ($(du -sh "$folder"))"
+}
+
+#######################################
+# Restore Transmission state.
+# Globals:
+#   VERBOSE           (bool)
+#   backups_dir       (string)
+#   autoload_dir      (string)
+#   pre_autoload_dir  (string)
+#   app_files         (array)
+# Arguments:
+#   nth  (int)  Sequential backup to restore where 1 is most recent.
+# Returns:
+#   None
+#######################################
+restore_transmission_state () {
+  local nth=${1:-1} # 1st most recent unless specified
+  local latest files
+  latest=$(
+    find "$backups_dir" -type d -depth 1 |
+    tail -$nth |
+    head -1
+  )
+
+  ! $VERBOSE || echo "$NAME: closing Transmission"
+  osascript -e 'tell application "Transmission"' -e 'quit' -e 'end tell'
+  sleep 1
+
+  ! $VERBOSE || echo "$NAME: about to restore most recent backup #$nth ($latest)"
+  for f in "${app_files[@]}"; do
+    ! $VERBOSE || echo "$NAME: deleting $f"
+    rm -rf "$f"
+    ! $VERBOSE || echo "$NAME: copying $latest/${f##*/} to ${f%/*}"
+    cp -a "$latest/${f##*/}" "${f%/*}"
+  done
+
+  ! $VERBOSE || echo "$NAME: launching Transmission"
+  open -a Transmission
+}
+
+#######################################
+# Move given number of torrents to autoload folder and wait for Transmission
+# to check existing data, estimating the time required based on the cumulative
+# size of the corresponding already downloaded torrents.
+# Globals:
+#   VERBOSE           (bool)
+#   QUIET           (bool)
+#   autoload_dir      (string)
+#   pre_autoload_dir  (string)
+#   downloads_dir     (string)
+# Arguments:
+#   qty  (int)  Number of torrents to move per batch.
+# Returns:
+#   None
+#######################################
+move_some_torrents_to_autoload_dir () {
+  local v qty files size rest
+  ! $VERBOSE || v='-v'
+  qty=${1:-5}
+  files=$(
+    find "$pre_autoload_dir" -type f -name "*.torrent" |
+    head -$qty
+  )
+  size=$(
+    echo "$files" |
+      sed "s|$pre_autoload_dir|$downloads_dir|g" |
+      sed 's/.torrent$//g' |
+      sed 's/.1$//g' | # try to recover from some autorenamed torrents
+      tr '\n' '\0' |
+      xargs -0 -n$qty du -cm |
+      grep total$ |
+      cut -f1
+  )
+  rest=$(( $size / 175 ))
+
+  $QUIET || {
+    echo "$NAME: about to move from $pre_autoload_dir:"
+    echo "$files" |
+      sed "s|$pre_autoload_dir/||g" |
+      tr '\n' '\0' |
+      xargs -0 -n$qty printf "    %s\n"
+  }
+  echo "$files" |
+    tr '\n' '\0' |
+    xargs -0 mv $v -t "$autoload_dir"
+
+  $QUIET || printf "%s\n" \
+    "$NAME: sleeping until $(date -d "+$rest seconds" "+%Y-%m-%d %H:%M:%S")"
+  sleep $rest
+}
+
+main () {
+  local VERBOSE=false
+  local QUIET=false
+  local mode
+  while true; do
+    case ${1:-} in
+      -V | --version ) printf "%s\n" "$NAME version $VERSION" && return 0 ;;
+      -h | --help    ) print_help && return 0 ;;
+      -v | --verbose ) VERBOSE=true; shift ;;
+      -q | --quiet   ) QUIET=true; shift ;;
+      backup | move | restore ) mode=$1; shift; break ;;
+      * ) print_help && return 1 ;;
+    esac
+  done
+
+  # compensate for backup subcommand taking no int arg
+  if [[ $mode != backup && $1 ]]; then
+    local n=${1:-}
+    shift
+  fi
+
+  local backups_dir=${1:-/Volumes/Scratch/transmission_backups}
+  local pre_autoload_dir=${2:-/Volumes/Striped/Videos/Torrents2}
+  local autoload_dir=${3:-/Volumes/Striped/Videos/Torrents}
+
+  local app_files=()
+  app_files+=("$HOME/Library/Caches/org.m0k.transmission")
+  app_files+=("$HOME/Library/Cookies/org.m0k.transmission.binarycookies")
+  app_files+=("$HOME/Library/Application Support/Transmission")
+  app_files+=("$HOME/Library/Preferences/org.m0k.transmission.plist")
+  app_files+=("$HOME/Library/Saved Application State/org.m0k.transmission.savedState")
+  app_files+=("$autoload_dir")
+  app_files+=("$pre_autoload_dir")
+
+  case $mode in
+    backup  ) backup_transmission_state;     return ;;
+    restore ) restore_transmission_state $n; return ;;
+  esac
+
+  # $mode == move
+
+  local downloads_dir=${4:-/Volumes/Striped/Videos/Movies}
+
+  while [[ $(find "$pre_autoload_dir" -type f -name "*.torrent" | wc -l) > 0 ]]; do
+    backup_transmission_state
+    move_some_torrents_to_autoload_dir $n
+  done
+}
+
+main "$@"
