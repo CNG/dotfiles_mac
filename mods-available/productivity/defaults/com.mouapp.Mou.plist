@@ -1,0 +1,15 @@
+{
+    autoPairCheckerKeyString = 0;
+    lineSpaceCheckerKeyString = 8;
+    livePreviewCheckerKeyString = 1;
+    mathCheckerKeyString = 0;
+    openDonateLinkKeyString = 0;
+    selectedCSSKeyString = Clearness;
+    selectedFontNameKeyString = Georgia;
+    selectedFontSizeKeyString = 24;
+    selectedThemeKeyString = "Tomorrow+";
+    showHelpDocumentKeyString = 0;
+    softTabCheckerKeyString = 1;
+    spellCheckerKeyString = 1;
+    syncScrollCheckerKeyString = 1;
+}

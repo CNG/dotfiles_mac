@@ -1,0 +1,9 @@
+{
+    HasRunBefore = 1;
+    ReverseMouse = 1;
+    ReverseTablet = 0;
+    ReverseTrackpad = 0;
+    ReverseX = 0;
+    ReverseY = 1;
+    SUEnableAutomaticChecks = 1;
+}

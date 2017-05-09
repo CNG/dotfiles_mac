@@ -1,0 +1,12 @@
+{
+    ClearHistoryOnExit = 0;
+    FirstLaunch = 0;
+    HotkeyActivations = 0;
+    LastSelectedPage = 0;
+    // UI max is 500:
+    MaxHistorySize = 1000;
+    // UI max is 500:
+    MaxMenuSize = 1000;
+    NotifyNewClipboardItem = 0;
+    PlaySounds = 0;
+}
