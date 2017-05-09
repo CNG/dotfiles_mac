@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Exit if any command returns nonzero or unset variable referenced.
-#set -o errexit -o pipefail -o nounset
+set -o errexit -o pipefail -o nounset
 
 main () {(
   # optional note to include in commit message
