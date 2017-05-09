@@ -230,6 +230,7 @@ _module_install_inner () {
     scripts_execute "$pth" 'install' $lvl2
   fi
   dotfiles_install "$pth" $lvl2
+  defaults_update "$path" $lvl2
   scripts_execute "$pth" 'upgrade' $lvl2
 }
 
@@ -271,6 +272,7 @@ module_upgrade () {
   scripts_execute "$path" 'upgrade' $lvl2
   packages_upgrade "$module" $lvl2
   dotfiles_install "$path" $lvl2
+  defaults_update "$path" $lvl2
   okay $lvl "Done."
 }
 
@@ -348,7 +350,7 @@ _module_remove_inner () {
 # List modules by status.
 # Globals:
 #   MODS_ALL  (string) Path to all modules that can be installed.
-#   MODS_ON  (string) Path to symlinks indicating installed modules.
+#   MODS_ON   (string) Path to symlinks indicating installed modules.
 # Arguments:
 #   status  (string) If not provided, separate lists of installed and not
 #     installed modules will be printed. Options are --not-installed,
@@ -716,7 +718,7 @@ scripts_execute () {
 #######################################
 # Symlink files named *.symlink to ~/.*
 # Globals:
-#   HOME  (string) Path to symlinks indicating installed modules.
+#   None
 # Arguments:
 #   pth  (string) Directory to search
 #   lvl  (int) Indentation level. Default 0.
@@ -745,10 +747,44 @@ dotfiles_install () {
 }
 
 #######################################
+# Install defaults from plists in defaults/*
+# Globals:
+#   # APP_ROOT  (string) Application directory.
+#   MODS_ALL  (string) Path to all modules that can be installed.
+# Arguments:
+#   pth  (string) Directory to search
+#   lvl  (int) Indentation level. Default 0.
+# Returns:
+#   None
+#######################################
+defaults_update () {
+  local pth=$1
+  local lvl=${2:-0} # 0 unless second param set
+  local lvl2=$(( lvl + 1 ))
+  local count=0
+
+  if [[ ! -h $pth ]]; then
+    fail $lvl "Invalid path $(fmt bold $pth)."
+    return 1
+  fi
+
+  # method if function already installed
+  # find -L "$APP_ROOT" -type f -path "*/mods-enabled/*/defaults/*" \
+  #   -exec zsh -c 'sync-defaults-simple {} from_file' \;
+
+  info $lvl "Checking for defaults files to install."
+  for src in "$pth"/defaults/*; do
+    "$MODS_ALL/base/functions/sync-defaults-simple" "$src" 'from_file'
+    (( count++ ))
+  done
+  (( count > 0 )) || info $lvl2 "No defaults files found."
+  okay $lvl "Done."
+}
+
+#######################################
 # Undo dotfiles_install by removing symlinks in ~ corresponding to files
 # named *.symlink
 # Globals:
-#   HOME   (string) Path to symlinks indicating installed modules.
 #   force  (true|false) Silence path errors.
 # Arguments:
 #   pth  (string) Directory to search
