@@ -19,7 +19,7 @@
 
 
 # Exit if any command returns nonzero or unset variable referenced.
-set -o errexit -o pipefail -o nounset
+#set -o errexit -o pipefail -o nounset
 
 # Reference material
 
@@ -118,8 +118,11 @@ set_default_from_file () {
   local plist_value current_type
   plist_value=$(defaults read "$plist" "$key")
   # using value from file, but use type from system because file is simplified
-  current_type=$(defaults read-type "$(basename "$plist")" "$key")
-  current_type=${current_type#Type is }
+  if current_type=$(defaults read-type "$(basename "$plist")" "$key" 2>&1); then
+    current_type=${current_type#Type is }
+  else
+    current_type='string'
+  fi
 
   case $current_type in
     data )
