@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+
+# Add cron job if it doesn't exist
+#
+# Usage: schedule-task 'line_as_will_appear_in_crontab' [ user ]
+#
+# Example: schedule-task '*/3 * * * *  cd $MT; perl ./tools/run-periodic-tasks -verbose >> $MTLOGDIR/rpt.log 2>&1' www-data
+#
+# Idea from http://stackoverflow.com/a/8106460/172602
+
+# Exit if any command returns nonzero or unset variable referenced.
+set -o errexit -o pipefail -o nounset
+
+task_exists () {
+  local tasks
+  if [[ $user = $(whoami) ]]; then
+    tasks=$(crontab -l)
+  else
+    tasks=$(sudo crontab -l -u $user)
+  fi
+  # printf "Existing tasks: \n\n%s\n" "$tasks"
+  [[ $tasks = *$task* ]]
+}
+
+add_task () {
+  if [[ $user = $(whoami) ]]; then
+    cat <(crontab -l) <(echo "$task") | crontab -
+  else
+    cat <(sudo crontab -l -u $user) <(echo "$task") | sudo crontab -u $user -
+  fi
+}
+
+main () {
+  local task=$1
+  local user=${2:-$(whoami)}
+  task_exists || add_task
+  task_exists
+}
+
+main "$@"

@@ -3,6 +3,13 @@
 These are in varying stages of development, but they might at least have useful
 bits.
 
+**[schedule-task](mods-available/base/functions/schedule-task)**
+
+Add a cron job if it doesn't exist.
+
+* Usage: `schedule-task 'line_as_will_appear_in_crontab' [ user ]`
+* Example: `schedule-task '*/3 * * * *  cd /usr/lib/cgi-bin/mt; perl ./tools/run-periodic-tasks -verbose >> /var/log/rpt.log 2>&1' www-data`
+
 **[sync-defaults-simple](mods-available/base/functions/sync-defaults-simple)**
 
 Previously I had lists of commands like `defaults write com.apple...` for setting up my system.
