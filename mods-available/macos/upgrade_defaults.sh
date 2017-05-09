@@ -12,6 +12,8 @@ keychain
 
 defaults write NSGlobalDomain com.apple.springing.delay -float 1
 
+defaults write com.apple.finder.plist arrangeBy dateModified
+
 # allow sudo without password
 # TODO this command works pasted but not from script, still need to debug
 # plus it's not wise to not use visudo anyway...
@@ -46,32 +48,36 @@ defaults write NSGlobalDomain com.apple.springing.delay -float 1
 # Increase default disk spindown from 10 mins
 sudo pmset -a disksleep 100
 
-# Default applications for filetypes
-duti -s org.videolan.vlc .mov all
-duti -s org.videolan.vlc .mp4 all
-duti -s org.videolan.vlc .mkv all
-duti -s com.sublimetext.3 .txt all
-duti -s com.sublimetext.3 .py all
-duti -s com.sublimetext.3 .php all
-duti -s com.sublimetext.3 .sh all
-duti -s com.sublimetext.3 .bash all
-duti -s com.sublimetext.3 .log all
-duti -s com.uranusjr.macdown .md all
-duti -s com.uranusjr.macdown .markdown all
+# open_with org.videolan.vlc MPG AVI
+open_with () {
+  local domain=$1 && shift
+  local arr=($@)
+  for ext in "${arr[@]}"; do
+    duti -s $1 .$ext all
+  done
+}
+open_with org.videolan.vlc ASX DTS GXF M2V M3U M4V MPEG1 MPEG2 MTS MXF OGM PLS BUP A52 AAC B4S CUE DIVX DV FLV M1V M2TS MKV MOV MPEG4 OMA SPX TS VLC VOB XSPF DAT BIN IFO PART 3G2 AVI MPEG MPG FLAC M4A MP1 OGG WAV XM 3GP SRT WMV AC3 ASF MOD MP2 MP3 MP4 WMA MKA M4P
+open_with com.sublimetext.3 txt py php sh bash log
+open_with com.uranusjr.macdown md markdown
 
 # Don't warn "You are opening the application “VLC” for the first time. Are you sure you want to open this application?"
 defaults write com.apple.LaunchServices LSQuarantine -bool NO
 
-# TODO: abstract this
-if [[ -d /Volumes/Striped ]]; then
-  scutil --set HostName "CharlieDesktop"
-  scutil --set LocalHostName "CharlieDesktop"
-  scutil --set ComputerName "CharlieDesktop"
-else
-  scutil --set HostName "CharlieLaptop"
-  scutil --set LocalHostName "CharlieLaptop"
-  scutil --set ComputerName "CharlieLaptop"
-fi
+# try to set hostname etc based on system config
+set_hostname () {
+  [[ $(which finger) ]] || return 0 # not a mac
+  first_name=$(finger $(whoami) | perl -ne '/Name: ([a-zA-Z0-9]{1,})/ && print "$1\n"')
+  if [[ $(sysctl -n hw.model | grep "Book") ]]; then
+    host_name="${first_name}Laptop"
+  else
+    host_name="${first_name}Desktop"
+  fi
+  [[ $(scutil --get HostName     ) = $host_name ]] || sudo scutil --set HostName      "$host_name"
+  [[ $(scutil --get LocalHostName) = $host_name ]] || sudo scutil --set LocalHostName "$host_name"
+  [[ $(scutil --get ComputerName ) = $host_name ]] || sudo scutil --set ComputerName  "$host_name"
+}
+set_hostname
+
 
 # Delete Apple Crap
 sudo rm -rf /Applications/GarageBand.app
