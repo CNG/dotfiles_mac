@@ -3,11 +3,19 @@
 # echo "› sudo softwareupdate -i -a"
 # sudo softwareupdate -i -a
 
+
+# Disable Gatekeeper, which produces messages like
+# "…can't be opened because it is from an unidentified developer"
+[[ $(spctl --status) = *disabled* ]] || sudo spctl --master-disable
+
+
+
+
 # This does not survive reboot. Need 'UseKeychain yes' in ~/.ssh/config
 # load identities from keychain
 # ssh-add -A
 
-# turn on keychain
+# turn on keychain (i forgot if this is a one time thing or needs to be added to startup)
 keychain
 
 defaults write NSGlobalDomain com.apple.springing.delay -float 1
