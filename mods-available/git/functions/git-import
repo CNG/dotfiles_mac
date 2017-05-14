@@ -14,29 +14,34 @@
 
 set -o errexit
 
-if [[ $(git rev-parse --is-inside-work-tree > /dev/null 2>&1) != true ]]; then
- echo "Must be inside Git repository work tree where ${1##*/} is to be imported."
- return
-fi
+git-import () {
 
-# Make unique temporary directory
-# https://unix.stackexchange.com/a/84980/39419
-temp=$(mktemp -d 2>/dev/null || mktemp -d -t 'temp')
-
-# Make patches
-(
-  if [[ -d $1 ]]; then
-    cd "$1"
-    object=.
-  else
-    cd "${1%/*}"
-    object=${1##*/}
+  if [[ $(git rev-parse --is-inside-work-tree 2>/dev/null) != true ]]; then
+    echo "Must be inside Git repository work tree where ${1##*/} is to be imported."
+    return
   fi
-  git format-patch --thread -o "$temp" --root -- "$object"
-)
 
-# Apply patches, try aborting on error but ignore abort errors
-git am "$temp"/*.patch || git am --abort || :
+  # Make unique temporary directory
+  # https://unix.stackexchange.com/a/84980/39419
+  temp=$(mktemp -d 2>/dev/null || mktemp -d -t 'temp')
 
-# Delete temporary directory
-rm -rf "$temp"
+  # Make patches
+  (
+    if [[ -d $1 ]]; then
+      cd "$1"
+      object=.
+    else
+      cd "${1%/*}"
+      object=${1##*/}
+    fi
+    git format-patch --thread -o "$temp" --root -- "$object"
+  )
+
+  # Apply patches, try aborting on error but ignore abort errors
+  git am "$temp"/*.patch || git am --abort || :
+
+  # Delete temporary directory
+  rm -rf "$temp"
+
+}
+git-import "$@"
