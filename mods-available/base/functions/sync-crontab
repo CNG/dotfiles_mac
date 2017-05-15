@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+
+# Install file crontab_$user to crontab, else export crontab to file
+#
+# Usage: sync-crontab [ user ]
+#
+# Example: sync-crontab root
+
+# Exit if any command returns nonzero or unset variable referenced.
+set -o errexit -o pipefail -o nounset
+
+main () {
+  local user=${1:-$(whoami)}
+  local f=crontab_$user
+
+  if [[ -f $f ]]; then
+    # echo "Installing $f to crontab for $user"
+    if [[ $user = $(whoami) ]]; then
+      cat $f | crontab -
+    else
+      cat $f | sudo crontab -u $user -
+    fi
+  else
+    echo "Exporting crontab for $user to $f"
+    if [[ $user = $(whoami) ]]; then
+      crontab -l > $f
+    else
+      sudo crontab -l -u $user > $f
+    fi
+  fi
+}
+
+if (( $# > 0 )); then
+  for user in "$@"; do
+    main $user
+  done
+else
+  main $(whoami)
+fi

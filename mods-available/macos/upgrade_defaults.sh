@@ -26,6 +26,7 @@ defaults write com.apple.finder.plist arrangeBy dateModified
 # TODO this command works pasted but not from script, still need to debug
 # plus it's not wise to not use visudo anyway...
 #sudo sed -i 's|^[[:space:]#]+(%wheel[[:space:]]+ALL[[:space:]]*=[[:space:]]*\([[:space:]]*ALL[[:space:]]*\)[[:space:]]*NOPASSWD:[[:space:]]*ALL.*)|\1|' /etc/sudoers
+# maybe just do echo '%wheel          ALL = (ALL) NOPASSWD: ALL' | sudo tee -a /etc/sudoers
 #sudo dscl . append /Groups/wheel GroupMembership $(whoami)
 #
 # enable root account

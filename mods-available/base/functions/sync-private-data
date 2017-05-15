@@ -1,62 +1,140 @@
-#!/usr/bin/env bash
+#!/usr/bin/env zsh
+# zsh so we can access autoloaded functions
+
+# sync-private-data
+# 
+# This script makes various updates to system files and backups in a Git repo
 
 # Exit if any command returns nonzero or unset variable referenced.
-#set -o errexit -o pipefail -o nounset
+# set -o errexit -o pipefail -o nounset
 
-main () {(
-  # optional note to include in commit message
+main () {
+  # Next line assumes $DOTFILES/private is Git repository for private files
+  local private_repo="$DOTFILES/private"
   local note=${1:-}
+
+  # format optional note to include in commit message
   [[ -z $note ]] || note=" [$note]"
 
-  cd "$DOTFILES/private"
+  (
+    cd "$private_repo"
+    git pull
 
-  # get any remote updates
-  git pull
+    # Next line assumes Shell history file is ~/.zsh_history
+    sync_zsh_history
 
-  zsh_history
-  automatic
+    # Next line does nothing if Automatic is not installed
+    backup_prefs_for_app_automatic
 
-  git push
-)}
+    # Next line assumes current user can sudo without password
+    update-hosts # Zsh autoloaded function
 
-# These preference files apparently get updated frequently with last check
-# dates, etc., so let's just back them up once. We can delete the file manually
-# if we want to update the repo version.
-automatic () {
+    # sync_crontab contains a Zsh autoloaded function
+    sync_crontab
+    # Next line assumes current user can sudo without password
+    sync_crontab root
+
+    git push
+  )
+}
+
+
+sync_crontab () {
+  local user=${1:-$(whoami)}
+  sync-crontab $user # Zsh autoloaded function
+  commit_if_untracked crontab_$user "Initial $user crontab"
+  commit_if_modified  crontab_$user "Update $user crontab"
+}
+
+
+# Usage: commit_if_* <file> <msg>
+commit_if_untracked () {
+  # [[ $(git ls-files --exclude-standard -o) =~ ($'\n'|^)$1($'\n'|$) ]] || return 0
+  [[ -n $(git ls-files --exclude-standard -o $1) ]] || return 0
+  git add -A "$1" && git commit -m "$2"
+}
+commit_if_untracked_or_modified () {
+  [[ -n $(git ls-files --exclude-standard -om $1) ]] || return 0
+  git add -A "$1" && git commit -m "$2"
+}
+commit_if_modified () {
+  [[ -n $(git ls-files --exclude-standard -m $1) ]] || return 0
+  git add -A "$1" && git commit -m "$2"
+}
+
+
+# Back up preferences for application "Automatic" to current directory
+# This is intended to be run from within $DOTFILES/private
+# Globals: $note
+backup_prefs_for_app_automatic () {
+  # These preference files apparently get updated frequently with timestamps,
+  # so let's just back them up once. We can delete the file manually if we want
+  # to update the version backed up in this repo.
   local f folder='Library/Application Support/Automatic'
   [[ -d $HOME/$folder ]] || return 0 # assume Automatic not installed
+
   mkdir -p "$folder"
+
   f="$folder/License"
   [[ -f $f ]] || cp -a "$HOME/$f" "$folder"
   f="$folder/Preferences"
   [[ -f $f ]] || cp -a "$HOME/$f" "$folder"
   f="$folder/Subscriptions"
   [[ -f $f ]] || cp -a "$HOME/$f" "$folder"
+
+  # return if nothing to commit
+  [[ -n $(git ls-files -m "$folder") ]] || return 0
+
   git add -A "$folder"
   git commit -m "$(hostname) Automatic prefs$note"
 }
 
-zsh_history () {
-  # merge local Zsh history if recently modified
+
+# merge local Zsh history if recently modified
+# Globals: $note
+sync_zsh_history () {
   local merged=zsh_history
   local splith=${merged}_$(hostname)
   local localh=$HOME/.$merged
-  if [[ $(find "$localh" -mtime -90m -print) ]]; then
-    touch $merged $splith
-    command diff --changed-group-format="%>" --unchanged-group-format="" $merged "$localh" >> $splith
-    if [[ $(which sponge) ]]; then
+
+  # proceed only if new last line in repo or local
+  # possible false match if last command multiline (so update next time, ok)
+  local last_merged=$(tail -n 1 "$merged")
+  local last_localh=$(tail -n 1 "$localh")
+  grep -Fq "$last_localh" "$splith" && grep -Fq "$last_merged" "$localh" &&
+    return 0
+
+  # forgot why this is here
+  touch $merged $splith
+
+  # add new content (appears locally but not in repo) to host log in repo
+  command diff --changed-group-format="%>" --unchanged-group-format="" \
+    $merged "$localh" >> $splith
+
+  # add local history to combined hosts repo history
+  # sort (timestamp prepended lines) and remove duplicates
+  if [[ $(which sponge) ]]; then
+    cat "$localh" $merged |
+      tr '\n' '\0' |
+      sed 's|\\\x00|\\\n|g' |
+      LC_ALL='C' sort -zu |
+      tr '\0' '\n' |
+      sponge $merged
+  else
+    echo "$(
       cat "$localh" $merged |
-        tr '\n' '\0' | sed 's|\\\x00|\\\n|g' | LC_ALL='C' sort -zu | tr '\0' '\n' |
-        sponge $merged
-    else
-      echo "$(cat "$localh" $merged | tr '\n' '\0' | sed 's|\\\x00|\n|g' |
-        LC_ALL='C' sort -zu | tr '\0' '\n')" > $merged
-    fi
-    git add $merged $splith
-    git commit -m "$(hostname) $merged$note"
+        tr '\n' '\0' |
+        sed 's|\\\x00|\n|g' |
+        LC_ALL='C' sort -zu |
+        tr '\0' '\n'
+    )" > $merged
   fi
-  # copy any recent remote updates to local Zsh history
+
+  # commit and copy newly merged history to local Zsh history
+  git add $merged $splith
+  git commit -m "$(hostname) $merged$note"
   cmp --silent $merged "$localh" || cp -a $merged "$localh"
 }
+
 
 main "$@"

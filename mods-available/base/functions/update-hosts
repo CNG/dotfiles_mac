@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 
-# Replace /etc/hosts with result of files $DOTFILES/private/hosts and
-# hosts_$(hostname) inserted into $hosts_url at $insert_marker
+# Replace /etc/hosts with result of files hosts and hosts_$(hostname) inserted
+# into $hosts_url at $insert_marker
 
 write_hosts_appending_custom () {
   {
     curl -fsL "$1"
     [[ ! -f hosts_$(hostname) ]] || cat hosts_$(hostname)
     [[ ! -f hosts ]] || cat hosts
-  } | sudo tee /etc/hosts
+  } | sudo tee /etc/hosts > /dev/null
 }
 
 write_hosts_inserting_custom () {
@@ -17,20 +17,13 @@ write_hosts_inserting_custom () {
   sed -e "/^$2/a \ \n# Entries from file hosts\n" |
   sed -e "/^$2/r./hosts_$(hostname)" |
   sed -e "/^$2/a \ \n# Entries from file hosts_$(hostname)\n" |
-  sudo tee /etc/hosts
+  sudo tee /etc/hosts > /dev/null
 }
 
-main () {(
+main () {
   local hosts_url='https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts'
   local insert_marker='# Custom host'
-
-  cd "$DOTFILES/private"
-
-  # get any remote updates
-  git pull
-
-  #write_hosts_appending_custom "$hosts_url"
   write_hosts_inserting_custom "$hosts_url" "$insert_marker"
-)}
+}
 
 main

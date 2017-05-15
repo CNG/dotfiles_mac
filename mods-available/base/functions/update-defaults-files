@@ -4,8 +4,7 @@
 set -o errexit -o pipefail -o nounset
 
 #######################################
-# Pass all defaults files through the function sync-defaults-simple in
-# from_system mode.
+# Pass all defaults files through "sync-defaults-simple from_system"
 # Globals:
 #   None
 # Arguments:
