@@ -51,15 +51,15 @@ sync_crontab () {
 commit_if_untracked () {
   # [[ $(git ls-files --exclude-standard -o) =~ ($'\n'|^)$1($'\n'|$) ]] || return 0
   [[ -n $(git ls-files --exclude-standard -o $1) ]] || return 0
-  git add -A "$1" && git commit -m "$2"
+  git add -A "$1" && git commit -m "$2$note"
 }
 commit_if_untracked_or_modified () {
   [[ -n $(git ls-files --exclude-standard -om $1) ]] || return 0
-  git add -A "$1" && git commit -m "$2"
+  git add -A "$1" && git commit -m "$2$note"
 }
 commit_if_modified () {
   [[ -n $(git ls-files --exclude-standard -m $1) ]] || return 0
-  git add -A "$1" && git commit -m "$2"
+  git add -A "$1" && git commit -m "$2$note"
 }
 
 
