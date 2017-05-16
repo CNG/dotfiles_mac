@@ -230,7 +230,7 @@ _module_install_inner () {
     scripts_execute "$pth" 'install' $lvl2
   fi
   dotfiles_install "$pth" $lvl2
-  defaults_update "$path" $lvl2
+  defaults_update "$pth" $lvl2
   scripts_execute "$pth" 'upgrade' $lvl2
 }
 
@@ -261,18 +261,18 @@ module_upgrade () {
 
   local count=0
   local nice_name=$(fmt bold $module)
-  local path=$MODS_ON/$module
+  local pth=$MODS_ON/$module
 
-  if [[ ! -h $path ]]; then
+  if [[ ! -h $pth ]]; then
     fail $lvl "Module $nice_name is not installed."
     return 1
   fi
 
   info $lvl "Upgrading module $nice_name."
-  scripts_execute "$path" 'upgrade' $lvl2
+  scripts_execute "$pth" 'upgrade' $lvl2
   packages_upgrade "$module" $lvl2
-  dotfiles_install "$path" $lvl2
-  defaults_update "$path" $lvl2
+  dotfiles_install "$pth" $lvl2
+  defaults_update "$pth" $lvl2
   okay $lvl "Done."
 }
 
