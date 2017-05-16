@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Install file crontab_$user to crontab, else export crontab to file
+# Install file crontab_$(hostname)_$user to crontab, else export crontab to file
 #
 # Usage: sync-crontab [ user ]
 #
@@ -11,7 +11,7 @@ set -o errexit -o pipefail -o nounset
 
 main () {
   local user=${1:-$(whoami)}
-  local f=crontab_$user
+  local f=crontab_$(hostname)_$user
 
   if [[ -f $f ]]; then
     # echo "Installing $f to crontab for $user"
