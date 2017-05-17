@@ -42,8 +42,8 @@ main () {
 sync_crontab () {
   local user=${1:-$(whoami)}
   sync-crontab $user # Zsh autoloaded function
-  commit_if_untracked crontab_$user "Initial $user crontab"
-  commit_if_modified  crontab_$user "Update $user crontab"
+  commit_if_untracked crontab_$(hostname)_$user "Initial $user crontab"
+  commit_if_modified  crontab_$(hostname)_$user "Update $user crontab"
 }
 
 
