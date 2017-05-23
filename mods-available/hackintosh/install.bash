@@ -12,7 +12,9 @@ install_hackintosh() {
   local modpath=$MODS_ALL/hackintosh
   local lvl=${1:-0} # 0 unless second param set
   local src dst
-  local package image volume
+  local package image volume archive
+
+  local tempdir
 
   link_file "$MAINSTORAGE/Documents/Projects" "$HOME/projects" $lvl
 
@@ -60,6 +62,22 @@ install_hackintosh() {
   umount $volume
   rm -f $image
 
+  # Install Creative SB1560: Sound Blaster Omni Surround 5.1
+  tempdir=$(mktemp -d 2>/dev/null || mktemp -d -t 'dotfiles')
+  image=SBOM_MAC_L13_1_04_19a.dmg
+  archive="$image.zip"
+  volume=/Volumes/SB_INSTALL
+  (
+    cd "$tempdir"
+    curl -o $archive http://ccftp.creative.com/manualdn/Drivers/AVP/13749/0x6BDB9682/$archive
+    unzip $archive
+    open $image
+    sleep 1
+  )
+  sudo installer -pkg $volume/Install.pkg -target /
+  umount $volume
+  rm -rf "$tempdir"
+
   # Install Fitbit Connect
   image=FitbitConnect-v2.0.1.6809-2016-08-09.dmg
   volume=/Volumes/FitbitConnect-v2.0.1.6809-2016-08-09
@@ -70,6 +88,7 @@ install_hackintosh() {
   rm -f $image
 
   cd -
+
 
   # same as in macos module but remove wifi and battery (which didn't show anyway)
   # TODO: use arrayremove/add command
