@@ -41,7 +41,7 @@
 		".hg",
 		"CVS"
 	],
-	"font_size": 17,
+	"font_size": 24,
 	"highlight_modified_tabs": true,
 	"ignored_packages":
 	[
@@ -59,6 +59,6 @@
 	"show_encoding": true,
 	"show_line_endings": true,
 	"tab_size": 2,
-	"translate_tabs_to_spaces": false,
-	"trim_trailing_white_space_on_save": false
+	"translate_tabs_to_spaces": true,
+	"trim_trailing_white_space_on_save": true
 }
