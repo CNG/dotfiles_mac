@@ -1,5 +1,7 @@
 alias reload!='. ~/.zshenv; . ~/.zshrc'
 alias br=". ~/.zshenv; . ~/.zshrc"
+alias l="ls -F --color=tty"
+alias ll="ls -l -F --color=tty"
 
 alias cls='clear' # Good 'ol Clear Screen command
 
