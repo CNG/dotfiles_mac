@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+# https://stackoverflow.com/questions/34876073/switch-network-link-conditioner-profiles-from-console-script
+
+mode="$1" osascript <<EOD
+
+set mode to system attribute "mode"
+tell application "System Preferences"
+  activate
+  set current pane to pane "com.apple.Network-Link-Conditioner"
+  tell application "System Events"
+    tell window "Network Link Conditioner" of process "System Preferences"
+      click button "ON"
+      tell group 1
+        click pop up button 1
+        click menu item mode of menu 1 of pop up button 1
+      end tell
+    end tell
+  end tell
+  quit
+end tell
+
+EOD
