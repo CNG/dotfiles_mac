@@ -265,9 +265,11 @@
 	<key>NSWindow Frame SharedPreferences</key>
 	<string>269 122 796 473 0 0 3840 2137 </string>
 	<key>NSWindow Frame iTerm Window 0</key>
-	<string>0 250 585 452 0 0 3840 2137 </string>
+	<string>1098 168 970 1969 0 0 3840 2137 </string>
 	<key>NSWindow Frame iTerm Window 1</key>
-	<string>107 1685 585 452 0 0 3840 2137 </string>
+	<string>1826 1645 585 452 0 0 3840 2137 </string>
+	<key>NSWindow Frame iTerm Window 2</key>
+	<string>894 769 1320 690 0 0 3840 2137 </string>
 	<key>NeverWarnAboutShortLivedSessions_8CD0C521-1F73-41C4-92A0-3D47D52EB3AB</key>
 	<true/>
 	<key>NeverWarnAboutShortLivedSessions_8CD0C521-1F73-41C4-92A0-3D47D52EB3AB_selection</key>
@@ -968,6 +970,8 @@
 	</dict>
 	<key>PrefsCustomFolder</key>
 	<string>~/.config/iterm2</string>
+	<key>Print In Black And White</key>
+	<true/>
 	<key>PromptOnQuit</key>
 	<false/>
 	<key>QuitWhenAllWindowsClosed</key>
@@ -981,7 +985,7 @@
 	<key>SUHasLaunchedBefore</key>
 	<string>1</string>
 	<key>SULastCheckTime</key>
-	<date>2017-05-06T19:26:02Z</date>
+	<date>2017-06-29T06:13:50Z</date>
 	<key>SUSendProfileInfo</key>
 	<false/>
 	<key>SmartPlacement</key>
