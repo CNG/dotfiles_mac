@@ -35,6 +35,6 @@ mas 'NetSpot Wi-Fi Reporter', id: 678464954
 #mas 'LittleIpsum', id: 405772121
 #mas 'RSS Bot', id: 605732865
 cask 'google-earth'
-cask kindle
-cask insync
+cask 'kindle'
+cask 'insync'
 
