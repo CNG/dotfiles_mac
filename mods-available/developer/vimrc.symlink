@@ -1,0 +1,79 @@
+" For Pathogen, a package manager
+runtime bundle/vim-pathogen/autoload/pathogen.vim
+execute pathogen#infect()
+syntax on
+filetype plugin indent on
+
+" prevent security exploits http://lists.alioth.debian.org/pipermail/pkg-vim-maintainers/2007-June/004020.html
+" set modelines=0
+
+" see http://vimdoc.sourceforge.net/htmldoc/options.html#%27tabstop%27
+" set tabstop=2
+set shiftwidth=2
+set softtabstop=2
+" set expandtab
+
+set encoding=utf-8
+set scrolloff=3
+set autoindent
+" default on in Vim: set showmode
+" default on in Vim: set showcmd
+" complicated, research later: set hidden
+set wildmenu
+set wildmode=list:longest
+set visualbell
+set cursorline
+set ttyfast
+set ruler
+set backspace=indent,eol,start
+set laststatus=2
+set relativenumber
+" set undofile
+
+" Need to better understand what crazy Vim regex Losh is talking about
+" nnoremap / /\v
+" vnoremap / /\v
+
+" set ignorecase
+" set smartcase
+" set gdefault
+set incsearch
+set showmatch
+set hlsearch
+nnoremap <leader><space> :noh<cr>
+" makes it easy to clear out a search by typing ,<space> (or \<space> ?)
+
+" nnoremap <tab> %
+" vnoremap <tab> %
+
+" set wrap
+" set textwidth=79
+" set formatoptions=qrn1
+set colorcolumn=85
+
+
+" Show < or > when characters are not displayed on the left or right.
+" set list listchars=precedes:<,extends:>
+" Same, but also show tabs and trailing spaces.
+" set listchars=tab:>-,trail:.,precedes:<,extends:>
+set listchars=tab:▸\ ,eol:¬,trail:~,extends:>,precedes:<
+" eol:$,tab:⇰\ ,space:\ ,trail:~,extends:>,precedes:<
+set list
+
+" following from http://stevelosh.com/blog/2010/09/coming-home-to-vim/
+" strip all trailing whitespace in the current file
+nnoremap <leader>W :%s/\s\+$//<cr>:let @/=''<CR>
+" fold tag
+nnoremap <leader>ft Vatzf
+" imitates TextMates Ctrl+Q function to re-hardwrap paragraphs of text
+nnoremap <leader>q gqip
+" reselect text that was just pasted
+nnoremap <leader>v V`]
+" nnoremap <C-h> <C-w>h
+" nnoremap <C-j> <C-w>j
+" nnoremap <C-k> <C-w>k
+" nnoremap <C-l> <C-w>l
+" open window and switch to it
+nnoremap <leader>w <C-w>v<C-w>l
+
+
