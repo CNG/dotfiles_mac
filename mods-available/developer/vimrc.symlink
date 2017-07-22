@@ -1,5 +1,6 @@
 " For Pathogen, a package manager
-runtime bundle/vim-pathogen/autoload/pathogen.vim
+source ~/.vim/bundle/vim-pathogen/autoload/pathogen.vim
+" runtime bundle/vim-pathogen/autoload/pathogen.vim
 execute pathogen#infect()
 syntax on
 filetype plugin indent on
