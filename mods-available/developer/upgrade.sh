@@ -47,6 +47,7 @@ upgrade_developer() {
   # git clone git://github.com/tpope/vim-abolish.git || true
   git clone git://github.com/tpope/vim-commentary.git || true
   git clone https://github.com/scrooloose/nerdcommenter.git || true
+  git clone git@github.com:michaeljsmith/vim-indent-object.git || true
 
   # SnipMate
   git clone https://github.com/tomtom/tlib_vim.git || true
