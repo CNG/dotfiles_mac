@@ -18,6 +18,10 @@ install_developer() {
   # dtrace: failed to initialize dtrace: DTrace requires additional privileges
   sudo chmod u+s /usr/sbin/dtrace
 
+  # Ruby application gem manager
+  # Added for compiling MacDown
+  sudo gem install bundler
+
 }
 
 install_developer $lvl3
