@@ -77,4 +77,16 @@ nnoremap <leader>v V`]
 " open window and switch to it
 nnoremap <leader>w <C-w>v<C-w>l
 
+" need to consider the following
+" from http://vim.wikia.com/wiki/Simplifying_regular_expressions_using_magic_and_no-magic
+nnoremap / /\v
+vnoremap / /\v
+cnoremap %s/ %smagic/
+cnoremap \>s/ \>smagic/
+nnoremap :g/ :g/\v
+nnoremap :g// :g//
+" This does not work with `:g` and interferes somewhat with Vim's search-history behavior
+" see http://stackoverflow.com/a/23021259/1858225
+" An alternative solution is to use this plugin: http://www.vim.org/scripts/script.php?script_id=4849
+
 
