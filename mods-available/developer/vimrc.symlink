@@ -89,4 +89,7 @@ nnoremap :g// :g//
 " see http://stackoverflow.com/a/23021259/1858225
 " An alternative solution is to use this plugin: http://www.vim.org/scripts/script.php?script_id=4849
 
+" https://stackoverflow.com/questions/1276403/simple-vim-commands-you-wish-youd-known-earlier#comment29598087_1295244
+" search & replace the selected text, e.g. v3e (visually select 3 words) * (search) and :%s//REPL/g
+:nmap <Leader>s :%s///g<left><left>
 
