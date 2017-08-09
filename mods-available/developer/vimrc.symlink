@@ -2,8 +2,13 @@
 source ~/.vim/bundle/vim-pathogen/autoload/pathogen.vim
 " runtime bundle/vim-pathogen/autoload/pathogen.vim
 execute pathogen#infect()
-syntax on
+" comment because adde.e syntax enable for Solarized colors
+" syntax on
 filetype plugin indent on
+
+syntax enable
+set background=dark
+colorscheme solarized
 
 " prevent security exploits http://lists.alioth.debian.org/pipermail/pkg-vim-maintainers/2007-June/004020.html
 " set modelines=0
@@ -57,7 +62,8 @@ set colorcolumn=85
 " set list listchars=precedes:<,extends:>
 " Same, but also show tabs and trailing spaces.
 " set listchars=tab:>-,trail:.,precedes:<,extends:>
-set listchars=tab:▸\ ,eol:¬,trail:~,extends:>,precedes:<
+" set listchars=tab:▸\ ,eol:¬,trail:~,extends:>,precedes:<
+set listchars=trail:~,extends:>,precedes:<
 " eol:$,tab:⇰\ ,space:\ ,trail:~,extends:>,precedes:<
 set list
 
@@ -82,7 +88,8 @@ nnoremap <leader>w <C-w>v<C-w>l
 nnoremap / /\v
 vnoremap / /\v
 cnoremap %s/ %smagic/
-cnoremap \>s/ \>smagic/
+" commented out bc conflict
+"cnoremap \>s/ \>smagic/
 nnoremap :g/ :g/\v
 nnoremap :g// :g//
 " This does not work with `:g` and interferes somewhat with Vim's search-history behavior
@@ -91,7 +98,7 @@ nnoremap :g// :g//
 
 " https://stackoverflow.com/questions/1276403/simple-vim-commands-you-wish-youd-known-earlier#comment29598087_1295244
 " search & replace the selected text, e.g. v3e (visually select 3 words) * (search) and :%s//REPL/g
-:nmap <Leader>s :%s///g<left><left>
+nmap <Leader>s :%s///g<left><left>
 
 " Allow saving of files as sudo when I forgot to start vim using sudo.
 " https://stackoverflow.com/a/7078429/172602
