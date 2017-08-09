@@ -93,3 +93,7 @@ nnoremap :g// :g//
 " search & replace the selected text, e.g. v3e (visually select 3 words) * (search) and :%s//REPL/g
 :nmap <Leader>s :%s///g<left><left>
 
+" Allow saving of files as sudo when I forgot to start vim using sudo.
+" https://stackoverflow.com/a/7078429/172602
+cmap w!! w !sudo tee > /dev/null %
+
