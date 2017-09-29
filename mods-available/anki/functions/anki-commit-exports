@@ -1,0 +1,65 @@
+#!/usr/bin/env zsh
+# zsh so we can access autoloaded functions
+
+# anki-commit-exports
+#
+# This script checks for updates to exported Anki decks and commits changes.
+# The exporting of decks still must be manually done through Anki.
+
+# Exit if any command returns nonzero or unset variable referenced.
+set -o errexit -o pipefail -o nounset
+
+main () {
+  local private_repo="$DOTFILES/private/anki-decks"
+  local public_repo="$PROJECTS/anki-decks"
+  local note=${1:-}
+
+  # format optional note to include in commit message
+  [[ -z $note ]] || note=" [$note]"
+
+  (
+    cd "$private_repo"
+    git pull
+    commit_contained_decks "$private_repo"
+    commit_contained_decks "$public_repo"
+    git push
+  )
+}
+
+commit_contained_decks () {
+  local parent_folder=$1
+  (
+    cd "$parent_folder"
+    git pull
+    for folder in */; do
+      [[ $folder != note_types/ ]] || continue
+      deck=${folder#General__}
+      deck=${deck//__/: }
+      deck=${deck//_/ }
+      deck=${deck%\/}
+      # don't want "Initial" message because of new files
+      # just stick with simple "Update" message for any changes
+      # commit_if_untracked "$folder" "Initial $deck deck"
+      # commit_if_modified  "$folder" "Update $deck deck"
+      commit_if_untracked_or_modified "$folder" "Update $deck deck"
+    done
+    git push
+  )
+}
+
+# Usage: commit_if_* <file> <msg>
+commit_if_untracked () {
+  # [[ $(git ls-files --exclude-standard -o) =~ ($'\n'|^)$1($'\n'|$) ]] || return 0
+  [[ -n $(git ls-files --exclude-standard -o $1) ]] || return 0
+  git add -A "$1" && git commit -m "$2$note"
+}
+commit_if_untracked_or_modified () {
+  [[ -n $(git ls-files --exclude-standard -om $1) ]] || return 0
+  git add -A "$1" && git commit -m "$2$note"
+}
+commit_if_modified () {
+  [[ -n $(git ls-files --exclude-standard -m $1) ]] || return 0
+  git add -A "$1" && git commit -m "$2$note"
+}
+
+main "$@"

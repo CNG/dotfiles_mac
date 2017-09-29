@@ -2,11 +2,11 @@
 # zsh so we can access autoloaded functions
 
 # sync-private-data
-# 
+#
 # This script makes various updates to system files and backups in a Git repo
 
 # Exit if any command returns nonzero or unset variable referenced.
-# set -o errexit -o pipefail -o nounset
+set -o errexit -o pipefail -o nounset
 
 main () {
   # Next line assumes $DOTFILES/private is Git repository for private files
@@ -47,7 +47,7 @@ sync_crontab () {
 }
 
 
-# Usage: commit_if_* <file> <msg>
+# Usage: commit_if_* <file or dir> <msg>
 commit_if_untracked () {
   # [[ $(git ls-files --exclude-standard -o) =~ ($'\n'|^)$1($'\n'|$) ]] || return 0
   [[ -n $(git ls-files --exclude-standard -o $1) ]] || return 0

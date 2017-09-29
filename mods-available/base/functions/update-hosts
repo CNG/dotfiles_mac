@@ -14,6 +14,7 @@ write_hosts_appending_custom () {
 write_hosts_inserting_custom () {
   curl -fsL "$1" |
   sed '/amazon-adsystem.com/d' | # allow Amazon Associates
+  sed '/velaro.com/d' | # allow SF Fire CU chat
   sed -e "/^$2/r./hosts" |
   sed -e "/^$2/a \ \n# Entries from file hosts\n" |
   sed -e "/^$2/r./hosts_$(hostname)" |
