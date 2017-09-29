@@ -10,6 +10,8 @@
 	<integer>0</integer>
 	<key>AppleSmoothFixedFontsSizeThreshold</key>
 	<integer>1</integer>
+	<key>AppleWindowTabbingMode</key>
+	<string>manual</string>
 	<key>Custom Color Presets</key>
 	<dict>
 		<key>Solarized Dark</key>
@@ -236,6 +238,13 @@
 			<key>Text</key>
 			<string></string>
 		</dict>
+		<key>0x3d-0x100000</key>
+		<dict>
+			<key>Action</key>
+			<integer>25</integer>
+			<key>Text</key>
+			<string>Make Text Bigger</string>
+		</dict>
 		<key>0x68-0x80000</key>
 		<dict>
 			<key>Action</key>
@@ -360,16 +369,14 @@
 	<true/>
 	<key>HideTabCloseButton</key>
 	<true/>
+	<key>HotkeyMigratedFromSingleToMulti</key>
+	<true/>
 	<key>LoadPrefsFromCustomFolder</key>
 	<string>1</string>
-	<key>NSColorPanelMode</key>
-	<string>6</string>
-	<key>NSColorPickerPreferredRGBEntryMode</key>
-	<integer>2</integer>
 	<key>NSNavLastRootDirectory</key>
-	<string>/Volumes/Minerva/Software/2015 Hackintosh/finished</string>
+	<string>~/.config</string>
 	<key>NSNavPanelExpandedSizeForOpenMode</key>
-	<string>{712, 459}</string>
+	<string>{712, 448}</string>
 	<key>NSQuotedKeystrokeBinding</key>
 	<string></string>
 	<key>NSRepeatCountBinding</key>
@@ -385,7 +392,7 @@
 	gAKACoAN0xAJChEVGVdOUy5rZXlzoxITFIADgASABaMWFxiABoAHgAiACVpJZGVudGlm
 	aWVyVVdpZHRoVkhpZGRlblEwI0BowAAAAAAACNIhIiMkWiRjbGFzc25hbWVYJGNsYXNz
 	ZXNcTlNEaWN0aW9uYXJ5oiMlWE5TT2JqZWN00xAJCicrGaMSExSAA4AEgAWjLC0YgAuA
-	DIAIgAlRMSNAczAAAAAAANIhIjM0Xk5TTXV0YWJsZUFycmF5ozM1JVdOU0FycmF5XxAP
+	DIAIgAlRMSNAczGdsi0OVtIhIjM0Xk5TTXV0YWJsZUFycmF5ozM1JVdOU0FycmF5XxAP
 	TlNLZXllZEFyY2hpdmVy0Tg5VUFycmF5gAEACAARABoAIwAtADIANwBGAEwAUQBcAGMA
 	ZgBoAGoAbABzAHsAfwCBAIMAhQCJAIsAjQCPAJEAnACiAKkAqwC0ALUAugDFAM4A2wDe
 	AOcA7gDyAPQA9gD4APwA/gEAAQIBBAEGAQ8BFAEjAScBLwFBAUQBSgAAAAAAAAIBAAAA
@@ -401,25 +408,16 @@
 	</data>
 	<key>NSTableView Supports v2 KeyBingingTable</key>
 	<true/>
-	<key>NSToolbar Configuration com.apple.NSColorPanel</key>
-	<dict>
-		<key>TB Is Shown</key>
-		<integer>1</integer>
-	</dict>
-	<key>NSWindow Frame NSColorPanel</key>
-	<string>610 606 228 297 0 0 2304 1418 </string>
-	<key>NSWindow Frame NSFontPanel</key>
-	<string>1793 110 445 103 0 0 2304 1418 </string>
-	<key>NSWindow Frame Preferences</key>
-	<string>101 166 606 456 0 0 1440 877 </string>
-	<key>NSWindow Frame SessionsPreferences</key>
-	<string>269 139 606 456 0 0 1440 878 </string>
+	<key>NSWindow Frame SUUpdateAlert</key>
+	<string>1610 1309 620 392 0 0 3840 2137 </string>
 	<key>NSWindow Frame SharedPreferences</key>
-	<string>155 286 796 473 0 0 2304 1418 </string>
+	<string>757 542 796 473 0 0 2560 1417 </string>
 	<key>NSWindow Frame iTerm Window 0</key>
-	<string>408 575 1054 843 0 0 2304 1418 </string>
+	<string>2736 172 640 1881 0 0 3840 2137 </string>
 	<key>NSWindow Frame iTerm Window 1</key>
-	<string>299 426 585 452 0 0 1440 878 </string>
+	<string>1680 350 1319 1611 0 0 3840 2137 </string>
+	<key>NSWindow Frame iTerm Window 2</key>
+	<string>894 769 1320 690 0 0 3840 2137 </string>
 	<key>NeverWarnAboutShortLivedSessions_8CD0C521-1F73-41C4-92A0-3D47D52EB3AB</key>
 	<true/>
 	<key>NeverWarnAboutShortLivedSessions_8CD0C521-1F73-41C4-92A0-3D47D52EB3AB_selection</key>
@@ -1081,14 +1079,10 @@
 			<string>/Users/cgorichanaz</string>
 		</dict>
 	</array>
-	<key>NoSyncConfirmBeta</key>
+	<key>NoSyncHaveWarnedAboutPasteConfirmationChange</key>
 	<true/>
-	<key>NoSyncDoNotWarnBeforeMultilinePaste</key>
-	<true/>
-	<key>NoSyncDoNotWarnBeforeMultilinePaste_selection</key>
-	<integer>0</integer>
 	<key>NoSyncInstallationId</key>
-	<string>95D926DB-C9AB-4418-BBD2-965CB043EAD9</string>
+	<string>9558DE4E-E738-4BE1-8B0B-2D0085C2B28A</string>
 	<key>NoSyncNeverRemindPrefsChangesLostForFile</key>
 	<true/>
 	<key>NoSyncNeverRemindPrefsChangesLostForFile_selection</key>
@@ -1096,11 +1090,7 @@
 	<key>NoSyncPermissionToShowTip</key>
 	<false/>
 	<key>NoSyncTimeOfFirstLaunchOfVersionWithTip</key>
-	<real>488274214.97137201</real>
-	<key>NoSyncTimeOfLastPromo</key>
-	<real>483310101.374547</real>
-	<key>NoSyncTimeOfLastPromoDownload</key>
-	<real>484302378.49740797</real>
+	<real>513817105.47228998</real>
 	<key>OnlyWhenMoreTabs</key>
 	<false/>
 	<key>OpenArrangementAtStartup</key>
@@ -1153,11 +1143,13 @@
 	<key>SUFeedAlternateAppNameKey</key>
 	<string>iTerm</string>
 	<key>SUFeedURL</key>
-	<string>https://iterm2.com/appcasts/final.xml?shard=77</string>
+	<string>https://iterm2.com/appcasts/final.xml?shard=0</string>
 	<key>SUHasLaunchedBefore</key>
 	<string>1</string>
 	<key>SULastCheckTime</key>
-	<date>2017-08-04T22:08:44Z</date>
+	<date>2017-09-25T20:22:22Z</date>
+	<key>SUSendProfileInfo</key>
+	<false/>
 	<key>ShowBookmarkName</key>
 	<false/>
 	<key>SmartPlacement</key>
@@ -1175,7 +1167,7 @@
 	<key>findRegex_iTerm</key>
 	<false/>
 	<key>iTerm Version</key>
-	<string>3.0.15</string>
+	<string>3.1.2</string>
 	<key>kCPKSelectionViewPreferredModeKey</key>
 	<integer>0</integer>
 	<key>kCPKSelectionViewShowHSBTextFieldsKey</key>
