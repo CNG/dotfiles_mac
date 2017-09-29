@@ -51,12 +51,23 @@ nnoremap <leader><space> :noh<cr>
 
 " nnoremap <tab> %
 " vnoremap <tab> %
+set spell
 
-" set wrap
+set wrap
+set linebreak
 " set textwidth=79
-" set formatoptions=qrn1
+set formatoptions=qrn1
 set colorcolumn=85
 
+" set formatoptions=ant
+" t: ensures text gets wrapped on textwidth
+" a: turns on real-time reformatting as you edit
+
+set textwidth=80
+set wrapmargin=0
+
+" don't do two spaces after sentences
+set nojoinspaces
 
 " Show < or > when characters are not displayed on the left or right.
 " set list listchars=precedes:<,extends:>
