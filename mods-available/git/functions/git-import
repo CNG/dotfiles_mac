@@ -38,7 +38,13 @@ git-import () {
   )
 
   # Apply patches, try aborting on error but ignore abort errors
-  git am "$temp"/*.patch || git am --abort || :
+  for i in "$temp"/*.patch
+  do
+      if test -f "$i"
+      then
+          git am $i || git am --abort || :
+      fi
+  done
 
   # Delete temporary directory
   rm -rf "$temp"
