@@ -7,7 +7,7 @@ brew 'sqlite'
 brew 'gdbm' #GNU database manager
 
 # virtualization
-cask 'parallels-desktop'
+cask 'parallels12'
 
 # filesystem tools
 cask 'carbon-copy-cloner'
