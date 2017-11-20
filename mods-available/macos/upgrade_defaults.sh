@@ -156,3 +156,7 @@ defaults write com.apple.dock wvous-bl-modifier -int 0
 # Bottom right screen corner → Show application windows
 defaults write com.apple.dock wvous-br-corner -int 3
 defaults write com.apple.dock wvous-br-modifier -int 0
+
+# Disable charging noise, which annoyingly dings every other second once fully charged
+defaults write com.apple.PowerChime ChimeOnAllHardware -bool false;
+killall PowerChime
