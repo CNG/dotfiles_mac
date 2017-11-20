@@ -11,7 +11,7 @@ brew 'keychain'
 
 # text editors
 cask 'sublime-text'
-cask 'macdown'
+cask 'typora'
 cask 'hex-fiend'
 # cask 'mou'
 # Error: Cask mou depends on macOS release <= 10.11, but you are running release 10.12.
