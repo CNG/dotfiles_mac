@@ -505,7 +505,7 @@ packages_upgrade () {
       case $line in
         'cask '* )
           package=${line#cask }
-          if ! log=$(brew cu -y "$package"); then
+          if ! log=$(brew cu -a -y "$package"); then
             fail "Error running: brew cu -y \"$package\""
             fail "Log:"
             echo "$log"
