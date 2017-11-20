@@ -1,3 +1,4 @@
+
 #######################################
 #
 # Globals:
@@ -7,13 +8,17 @@
 # Returns:
 #   None
 #######################################
-remove_hackintosh() {
+install_macos() {
+  local modpath=$MODS_ALL/hackintosh
   local lvl=${1:-0} # 0 unless second param set
-  local dst
+  local src dst
 
   # Karabiner Elements
+  src=$modpath/karabiner.json
   dst=$HOME/.config/karabiner
-  trash_file "$dst" $lvl
+  mkdir -p "$dst"
+  dst=$dst/karabiner.json
+  link_file "$src" "$dst" $lvl
 }
 
-remove_hackintosh $lvl3
+install_macos $lvl3

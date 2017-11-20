@@ -18,13 +18,6 @@ install_hackintosh() {
 
   link_file "$MAINSTORAGE/Documents/Projects" "$HOME/projects" $lvl
 
-  # Karabiner Elements
-  src=$modpath/karabiner.json
-  dst=$HOME/.config/karabiner
-  mkdir -p "$dst"
-  dst=$dst/karabiner.json
-  link_file "$src" "$dst" $lvl
-
   # Enable accessibility settings
   # This is under hackintosh because only works if SIP disabled
   sudo sqlite3 "/Library/Application Support/com.apple.TCC/TCC.db" 'UPDATE access SET allowed = "1";'
