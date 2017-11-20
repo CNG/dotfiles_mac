@@ -150,6 +150,7 @@ main () {
 
   IFS=$'\r\n'
   keys=($(/usr/libexec/PlistBuddy -c Print "$plist" | perl -lne 'print $1 if /^    (\S.*\S|\S) =/'))
+echo $keys
 
   case ${2:-} in
 

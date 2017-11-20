@@ -22,7 +22,7 @@ cask 'handbrake'
 brew 'imagemagick'
 
 # recorders
-mas 'Camera Record Pro', id: 1056029469
+mas 'Camera Record-Camera Recorder', id: 1056029469
 mas 'Quick Recorder', id: 1020149961
 
 # mp3 editor, I think

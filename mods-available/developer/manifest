@@ -1,5 +1,7 @@
 # IDEs
-mas 'Xcode', id: 497799835
+# try to let Homebrew use its bottled Xcodes per https://github.com/mas-cli/mas/issues/84
+# mas 'Xcode', id: 497799835
+
 cask 'coda'
 
 # console and ssh
@@ -52,6 +54,7 @@ brew 'make'
 brew 'rsync'
 #brew 'openssh' # need to resolve agent strategy Bad configuration option: usekeychain
 brew 'screen'
+mas 'Table Tool', id: 1122008420
 
 # Install GNU core utilities (those that come with macOS are outdated).
 # Don’t forget to add `$(brew --prefix coreutils)/libexec/gnubin` to `$PATH`.
@@ -66,3 +69,8 @@ brew 'findutils'
 brew 'autoconf' #Automatic configure script builder
 brew 'automake' #Tool for generating GNU Standards-compliant Makefiles
 brew 'pkg-config' #Manage compile and link flags for libraries
+
+# Brew Cask contributing
+tap 'vitorgalvao/tiny-scripts'
+brew 'vitorgalvao/tiny-scripts/cask-repair'
+

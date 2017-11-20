@@ -506,6 +506,8 @@ packages_upgrade () {
         'cask '* )
           package=${line#cask }
           if ! log=$(brew cu -y "$package"); then
+            fail "Error running: brew cu -y \"$package\""
+            fail "Log:"
             echo "$log"
             return 1
           fi

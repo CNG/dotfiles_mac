@@ -33,7 +33,7 @@ upgrade_developer() {
   # I don't like symlinking directories into dotfiles
 
   # TODO: convert these to git pull if folder exists
-  
+
   # Install pathogen.vim but to bundle folder, requiring in .vimrc:
   #   runtime bundle/vim-pathogen/autoload/pathogen.vim
   mkdir -p ~/.vim/bundle
@@ -57,8 +57,6 @@ upgrade_developer() {
   git clone https://github.com/garbas/vim-snipmate.git || true
   # Optional:
   git clone https://github.com/honza/vim-snippets.git || true
-
-
 
 }
 

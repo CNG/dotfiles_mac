@@ -159,4 +159,4 @@ defaults write com.apple.dock wvous-br-modifier -int 0
 
 # Disable charging noise, which annoyingly dings every other second once fully charged
 defaults write com.apple.PowerChime ChimeOnAllHardware -bool false;
-killall PowerChime
+killall PowerChime || true

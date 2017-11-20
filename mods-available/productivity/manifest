@@ -13,6 +13,7 @@ mas 'Clipboard History', id: 420939835
 mas 'Divvy', id: 413857545
 # Retina DisplayMenu
 cask 'avibrazil-rdm'
+mas 'HazeOver', id: 430798174
 
 # logging
 cask 'rescuetime'
@@ -37,4 +38,5 @@ mas 'NetSpot Wi-Fi Reporter', id: 678464954
 cask 'google-earth'
 cask 'kindle'
 cask 'insync'
+mas 'Red Hot Timer', id: 929960914
 
