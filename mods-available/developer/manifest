@@ -16,7 +16,7 @@ cask 'hex-fiend'
 # Error: nothing to install
 # ==> Satisfying dependencies
 # Installing mou has failed!
-brew 'vim', args: ['with-override-system-vi']
+brew 'vim', args: ['with-override-system-vi', 'without-python']
 
 # file transfer
 #cask 'transmit'
