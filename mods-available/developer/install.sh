@@ -16,7 +16,7 @@ install_developer() {
   open "$modpath/Solarized Dark.itermcolors"
 
   # dtrace: failed to initialize dtrace: DTrace requires additional privileges
-  sudo chmod u+s /usr/sbin/dtrace
+  sudo chmod u+s /usr/sbin/dtrace || true # don't fail totally if macOS not patched
 
 }
 

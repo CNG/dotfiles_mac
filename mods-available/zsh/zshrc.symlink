@@ -31,3 +31,5 @@ for file in ${(M)config_files:#*/completion*}; do
 done
 
 unset config_files
+source /etc/bashrc_fitbit
+export PATH=$HOME/.local/bin:$PATH

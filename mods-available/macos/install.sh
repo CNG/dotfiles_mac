@@ -9,7 +9,7 @@
 #   None
 #######################################
 install_macos() {
-  local modpath=$MODS_ALL/hackintosh
+  local modpath=$MODS_ALL/macos
   local lvl=${1:-0} # 0 unless second param set
   local src dst
 

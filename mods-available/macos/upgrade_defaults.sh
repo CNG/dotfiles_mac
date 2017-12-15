@@ -85,8 +85,8 @@ set_hostname () {
   [[ $(scutil --get LocalHostName) = $host_name ]] || sudo scutil --set LocalHostName "$host_name"
   [[ $(scutil --get ComputerName ) = $host_name ]] || sudo scutil --set ComputerName  "$host_name"
 }
-set_hostname
-
+# Need to reevaluate. Don't want work computer hostname change, might need more flexibility
+# set_hostname
 
 # Delete Apple Crap
 sudo rm -rf /Applications/GarageBand.app
@@ -118,7 +118,7 @@ defaults write com.apple.HIToolbox.plist AppleEnabledInputSources -array \
 # Stop console spam:
 # (com.apple.wifivelocityd): Service only ran for 0 seconds. Pushing respawn out by 10 seconds.
 # http://www.insanelymac.com/forum/topic/317694-wifi-wifivelocityd-spamming-system-log/
-sudo defaults write /System/Library/LaunchDaemons/com.apple.wifivelocityd.plist Disabled -bool YES
+sudo defaults write /System/Library/LaunchDaemons/com.apple.wifivelocityd.plist Disabled -bool YES || true
 
 # Enable screen sharing
 sudo defaults write /var/db/launchd.db/com.apple.launchd/overrides.plist com.apple.screensharing -dict Disabled -bool false

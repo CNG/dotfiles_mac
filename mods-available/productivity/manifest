@@ -1,3 +1,5 @@
+tap 'caskroom/drivers'
+
 # my products and services
 cask 'logitech-options'
 
@@ -35,7 +37,13 @@ mas 'NetSpot Wi-Fi Reporter', id: 678464954
 #other
 #mas 'LittleIpsum', id: 405772121
 #mas 'RSS Bot', id: 605732865
-cask 'google-earth'
+
+#brew cask search google-earth
+#==> Partial Matches
+#google-earth-pro                                                                                      google-earth-web-plugin
+#cask 'google-earth'
+
+
 cask 'kindle'
 cask 'insync'
 mas 'Red Hot Timer', id: 929960914

@@ -8,7 +8,9 @@ filetype plugin indent on
 
 syntax enable
 set background=dark
-colorscheme solarized
+" colorscheme solarized
+colorscheme molokai
+" let g:molokai_original = 1
 
 " prevent security exploits http://lists.alioth.debian.org/pipermail/pkg-vim-maintainers/2007-June/004020.html
 " set modelines=0

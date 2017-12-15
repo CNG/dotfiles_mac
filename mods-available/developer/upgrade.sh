@@ -50,6 +50,7 @@ upgrade_developer() {
   git clone git@github.com:michaeljsmith/vim-indent-object.git || true
   git clone https://github.com/bronson/vim-visual-star-search.git || true
   git clone git://github.com/altercation/vim-colors-solarized.git || true
+  git clone https://github.com/tomasr/molokai.git || true
 
   # SnipMate
   git clone https://github.com/tomtom/tlib_vim.git || true

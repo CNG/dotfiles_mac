@@ -1,2 +1,5 @@
 brew 'zsh'
 brew 'grc'
+
+brew 'highlight'
+
